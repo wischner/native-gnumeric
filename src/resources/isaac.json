@@ -1,0 +1,395 @@
+{
+    "version": 1,
+    "resources": [
+        {
+            "name": "icons.toolbar.fileNew",
+            "type": "icon",
+            "variants": [
+                {
+                    "file": "icons/color/fileNew.png"
+                },
+                {
+                    "file": "icons/monochrome/fileNew.png",
+                    "when": {
+                        "color": "monochrome"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "icons.toolbar.fileOpen",
+            "type": "icon",
+            "variants": [
+                {
+                    "file": "icons/color/fileOpen.png"
+                },
+                {
+                    "file": "icons/monochrome/fileOpen.png",
+                    "when": {
+                        "color": "monochrome"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "icons.toolbar.fileSave",
+            "type": "icon",
+            "variants": [
+                {
+                    "file": "icons/color/fileSave.png"
+                },
+                {
+                    "file": "icons/monochrome/fileSave.png",
+                    "when": {
+                        "color": "monochrome"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "icons.toolbar.undo",
+            "type": "icon",
+            "variants": [
+                {
+                    "file": "icons/color/undo.png"
+                },
+                {
+                    "file": "icons/monochrome/undo.png",
+                    "when": {
+                        "color": "monochrome"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "icons.toolbar.redo",
+            "type": "icon",
+            "variants": [
+                {
+                    "file": "icons/color/redo.png"
+                },
+                {
+                    "file": "icons/monochrome/redo.png",
+                    "when": {
+                        "color": "monochrome"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "icons.toolbar.cut",
+            "type": "icon",
+            "variants": [
+                {
+                    "file": "icons/color/cut.png"
+                },
+                {
+                    "file": "icons/monochrome/cut.png",
+                    "when": {
+                        "color": "monochrome"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "icons.toolbar.copy",
+            "type": "icon",
+            "variants": [
+                {
+                    "file": "icons/color/copy.png"
+                },
+                {
+                    "file": "icons/monochrome/copy.png",
+                    "when": {
+                        "color": "monochrome"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "icons.toolbar.paste",
+            "type": "icon",
+            "variants": [
+                {
+                    "file": "icons/color/paste.png"
+                },
+                {
+                    "file": "icons/monochrome/paste.png",
+                    "when": {
+                        "color": "monochrome"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "icons.toolbar.find",
+            "type": "icon",
+            "variants": [
+                {
+                    "file": "icons/color/find.png"
+                },
+                {
+                    "file": "icons/monochrome/find.png",
+                    "when": {
+                        "color": "monochrome"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "icons.toolbar.toggleBold",
+            "type": "icon",
+            "variants": [
+                {
+                    "file": "icons/color/toggleBold.png"
+                },
+                {
+                    "file": "icons/monochrome/toggleBold.png",
+                    "when": {
+                        "color": "monochrome"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "icons.toolbar.toggleItalic",
+            "type": "icon",
+            "variants": [
+                {
+                    "file": "icons/color/toggleItalic.png"
+                },
+                {
+                    "file": "icons/monochrome/toggleItalic.png",
+                    "when": {
+                        "color": "monochrome"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "icons.toolbar.toggleUline",
+            "type": "icon",
+            "variants": [
+                {
+                    "file": "icons/color/toggleUline.png"
+                },
+                {
+                    "file": "icons/monochrome/toggleUline.png",
+                    "when": {
+                        "color": "monochrome"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "icons.toolbar.toggleStrike",
+            "type": "icon",
+            "variants": [
+                {
+                    "file": "icons/color/toggleStrike.png"
+                },
+                {
+                    "file": "icons/monochrome/toggleStrike.png",
+                    "when": {
+                        "color": "monochrome"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "icons.toolbar.alignLeft",
+            "type": "icon",
+            "variants": [
+                {
+                    "file": "icons/color/alignLeft.png"
+                },
+                {
+                    "file": "icons/monochrome/alignLeft.png",
+                    "when": {
+                        "color": "monochrome"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "icons.toolbar.alignCenter",
+            "type": "icon",
+            "variants": [
+                {
+                    "file": "icons/color/alignCenter.png"
+                },
+                {
+                    "file": "icons/monochrome/alignCenter.png",
+                    "when": {
+                        "color": "monochrome"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "icons.toolbar.alignRight",
+            "type": "icon",
+            "variants": [
+                {
+                    "file": "icons/color/alignRight.png"
+                },
+                {
+                    "file": "icons/monochrome/alignRight.png",
+                    "when": {
+                        "color": "monochrome"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "icons.toolbar.alignJustify",
+            "type": "icon",
+            "variants": [
+                {
+                    "file": "icons/color/alignJustify.png"
+                },
+                {
+                    "file": "icons/monochrome/alignJustify.png",
+                    "when": {
+                        "color": "monochrome"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "icons.toolbar.autoSum",
+            "type": "icon",
+            "variants": [
+                {
+                    "file": "icons/color/autoSum.png"
+                },
+                {
+                    "file": "icons/monochrome/autoSum.png",
+                    "when": {
+                        "color": "monochrome"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "icons.toolbar.sortAscending",
+            "type": "icon",
+            "variants": [
+                {
+                    "file": "icons/color/sortAscending.png"
+                },
+                {
+                    "file": "icons/monochrome/sortAscending.png",
+                    "when": {
+                        "color": "monochrome"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "icons.toolbar.sortDescending",
+            "type": "icon",
+            "variants": [
+                {
+                    "file": "icons/color/sortDescending.png"
+                },
+                {
+                    "file": "icons/monochrome/sortDescending.png",
+                    "when": {
+                        "color": "monochrome"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "icons.toolbar.mergeCells",
+            "type": "icon",
+            "variants": [
+                {
+                    "file": "icons/color/mergeCells.png"
+                },
+                {
+                    "file": "icons/monochrome/mergeCells.png",
+                    "when": {
+                        "color": "monochrome"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "icons.toolbar.formatPercent",
+            "type": "icon",
+            "variants": [
+                {
+                    "file": "icons/color/formatPercent.png"
+                },
+                {
+                    "file": "icons/monochrome/formatPercent.png",
+                    "when": {
+                        "color": "monochrome"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "icons.toolbar.formatCurrency",
+            "type": "icon",
+            "variants": [
+                {
+                    "file": "icons/color/formatCurrency.png"
+                },
+                {
+                    "file": "icons/monochrome/formatCurrency.png",
+                    "when": {
+                        "color": "monochrome"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "icons.toolbar.decimalsMore",
+            "type": "icon",
+            "variants": [
+                {
+                    "file": "icons/color/decimalsMore.png"
+                },
+                {
+                    "file": "icons/monochrome/decimalsMore.png",
+                    "when": {
+                        "color": "monochrome"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "icons.toolbar.decimalsLess",
+            "type": "icon",
+            "variants": [
+                {
+                    "file": "icons/color/decimalsLess.png"
+                },
+                {
+                    "file": "icons/monochrome/decimalsLess.png",
+                    "when": {
+                        "color": "monochrome"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "icons.toolbar.borderOutline",
+            "type": "icon",
+            "variants": [
+                {
+                    "file": "icons/color/borderOutline.png"
+                },
+                {
+                    "file": "icons/monochrome/borderOutline.png",
+                    "when": {
+                        "color": "monochrome"
+                    }
+                }
+            ]
+        }
+    ]
+}
