@@ -1,5 +1,5 @@
-# Isaac on any Native backend. `make` remains the
-# local entry point; this file is what the platform SDKs build.
+# Isaac on any Native backend. `make` remains the local entry point; this
+# file is what the platform SDKs build.
 cmake_minimum_required(VERSION 3.20)
 project(isaac LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 20)
@@ -8,7 +8,10 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 set(ISAAC_VERSION "0.1.0" CACHE STRING "Application version")
 if(NOT NATIVE_ROOT)
-    get_filename_component(NATIVE_ROOT "${CMAKE_SOURCE_DIR}/../native" ABSOLUTE)
+    # Same GitHub clone the Makefile uses; -DNATIVE_ROOT=/path uses a checkout.
+    execute_process(COMMAND sh "${CMAKE_SOURCE_DIR}/scripts/build/fetch_native.sh"
+        OUTPUT_VARIABLE NATIVE_ROOT OUTPUT_STRIP_TRAILING_WHITESPACE
+        COMMAND_ERROR_IS_FATAL ANY)
 endif()
 set(BUILD_TESTING OFF CACHE BOOL "Native standalone tests" FORCE)
 add_subdirectory(src/ui native-dependency)
@@ -23,6 +26,12 @@ target_compile_options(isaac_options INTERFACE
     $<$<CXX_COMPILER_ID:GNU>:-Wall;-Wextra;-pedantic>)
 target_compile_definitions(isaac_options INTERFACE
     ISAAC_VERSION="${ISAAC_VERSION}")
+# Native's probe found std::jthread only behind libc++'s experimental
+# library; its add_compile_options does not reach this directory.
+if(APPLE AND NOT NATIVE_HAS_CXX20_THREADS)
+    target_compile_options(isaac_options INTERFACE -fexperimental-library)
+    target_link_options(isaac_options INTERFACE -fexperimental-library)
+endif()
 
 set(core_sources)
 foreach(name ${libraries})
@@ -60,8 +69,15 @@ add_library(isaac_ui STATIC ${ui_sources} "${resource_cpp}")
 target_include_directories(isaac_ui PUBLIC src/ui)
 target_link_libraries(isaac_ui PUBLIC isaac_core native)
 
-add_executable(isaac WIN32 src/main.cpp)
+add_executable(isaac WIN32 MACOSX_BUNDLE src/main.cpp)
 target_link_libraries(isaac PRIVATE isaac_ui)
+if(APPLE)
+    set_target_properties(isaac PROPERTIES
+        MACOSX_BUNDLE_BUNDLE_NAME "Isaac"
+        MACOSX_BUNDLE_GUI_IDENTIFIER "com.wischner.isaac"
+        MACOSX_BUNDLE_BUNDLE_VERSION "${ISAAC_VERSION}"
+        MACOSX_BUNDLE_SHORT_VERSION_STRING "${ISAAC_VERSION}")
+endif()
 
 file(GLOB ui_tests CONFIGURE_DEPENDS tests/ui/test_*.cpp)
 add_executable(test_desktop ${ui_tests})

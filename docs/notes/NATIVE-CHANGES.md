@@ -1,6 +1,7 @@
 # Native changes made for Isaac
 
-These extend the sibling `../native`. A contract added to Native has to work on
+These extend [Native](https://github.com/wischner/native) on its
+`fyodor-native-extensions` branch. A contract added to Native has to work on
 every backend, so nothing here is SDL2-only.
 
 | Change | Why | Backends |

@@ -24,8 +24,7 @@ $(UI_TEST): $(UI_SOURCES) $(wildcard $(ROOT)/tests/ui/*.h) $(UI_OBJ) $(LINK_LIBS
 	@$(CXX) $(CXXFLAGS) -isystem $(NATIVE_ROOT)/include -I$(ROOT)/src/ui \
 	    -I$(ROOT)/tests/unit -DFIXTURES='"$(ROOT)/tests/fixtures"' -MMD -MP \
 	    $(UI_SOURCES) $(UI_OBJ) $(LINK_LIBS) $(NATIVE_ARCHIVE) $(LDFLAGS) \
-	    $(NATIVE_LDLIBS) -Wl,-rpath,'$$ORIGIN/../../sdk/usr/lib/x86_64-linux-gnu' \
-	    -o $@
+	    $(NATIVE_LDLIBS) -o $@
 	@echo "  TEST    $(notdir $@)"
 
 ui: $(UI_TEST)

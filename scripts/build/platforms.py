@@ -7,11 +7,14 @@ usage: platforms.py [all|BACKEND] [--mode release|debug] [--build-only]
 from pathlib import Path
 import json
 import os
+import platform
 import subprocess
 import sys
 
 ROOT = Path(__file__).resolve().parents[2]
-NATIVE = Path(os.environ.get('NATIVE_ROOT', ROOT.parent / 'native')).resolve()
+NATIVE = Path(os.environ.get('NATIVE_ROOT') or subprocess.run(
+    ['sh', str(ROOT / 'scripts/build/fetch_native.sh')], check=True,
+    capture_output=True, text=True).stdout.strip()).resolve()
 PLATFORMS = json.loads((ROOT / 'scripts/build/platforms.json').read_text())
 TIMEOUT = 1800
 BUILD_TYPES = {'release': 'Release', 'debug': 'Debug'}
@@ -22,9 +25,27 @@ def build_dir(name, mode):
     return ROOT / 'build/platforms' / name / mode
 
 
+def ensure_image(spec):
+    """Build an SDK image that is not on Docker Hub from Native's Dockerfile."""
+    if 'dockerfile' not in spec or 'image' not in spec:
+        return True
+    image = spec['image']
+    if subprocess.run(['docker', 'image', 'inspect', image],
+                      capture_output=True).returncode == 0:
+        return True
+    context = spec['dockerfile'].format(native=NATIVE)
+    return subprocess.run(['docker', 'build', '-t', image, context]
+                          ).returncode == 0
+
+
 def run_one(name, mode, build_only, resources_only=False):
     """Return 'passed', or the failing stage."""
     spec = PLATFORMS[name]
+    # Host backends (macOS) build with the machine's own toolchain.
+    if 'host' in spec and platform.system() != spec['host']:
+        return f'skipped (needs {spec["host"]})'
+    if not ensure_image(spec):
+        return 'image build failed'
     build = build_dir(name, mode)
     resource_args = []
     if any('CMAKE_TOOLCHAIN_FILE' in part for part in spec['cmake']):
@@ -33,17 +54,21 @@ def run_one(name, mode, build_only, resources_only=False):
             return f'host resources: {outcome}'
         resource_cpp = build_dir('linux-sdl2', 'release') / 'resources/isaac.cpp'
         resource_args = [f'-DISAAC_RESOURCE_CPP={resource_cpp}']
-    docker = ['docker', 'run', '--rm', '--init', '-u',
-              f'{os.getuid()}:{os.getgid()}', '-e', 'HOME=/tmp',
-              '-e', 'ASAN_OPTIONS=detect_leaks=0', '-v', f'{ROOT}:{ROOT}',
-              '-v', f'{NATIVE}:{NATIVE}', '-w', str(ROOT), spec['image']]
+    if os.environ.get('ISAAC_VERSION'):
+        resource_args.append(f'-DISAAC_VERSION={os.environ["ISAAC_VERSION"]}')
+    docker = [] if 'host' in spec else [
+        'docker', 'run', '--rm', '--init', '-u',
+        f'{os.getuid()}:{os.getgid()}', '-e', 'HOME=/tmp',
+        '-e', 'ASAN_OPTIONS=detect_leaks=0', '-v', f'{ROOT}:{ROOT}',
+        '-v', f'{NATIVE}:{NATIVE}', '-w', str(ROOT), spec['image']]
     stages = {
         'configure': ['cmake', '-S', '.', '-B', str(build),
                       f'-DNATIVE_ROOT={NATIVE}',
                       f'-DCMAKE_BUILD_TYPE={BUILD_TYPES[mode]}',
                       *resource_args,
                       *[part.format(native=NATIVE) for part in spec['cmake']]],
-        'build': ['cmake', '--build', str(build), '-j8', '--target',
+        'build': ['cmake', '--build', str(build), f'-j{os.cpu_count() or 8}',
+                  '--target',
                   *(['isaac_resources'] if resources_only else
                     ['isaac', 'test_desktop'])],
     }
@@ -83,7 +108,7 @@ def main():
             log = build_dir(name, mode) / 'build.log'
             if log.exists():
                 print(log.read_text()[-4000:], flush=True)
-        failed |= outcome != 'passed'
+        failed |= outcome != 'passed' and not outcome.startswith('skipped')
     return 1 if failed else 0
 
 

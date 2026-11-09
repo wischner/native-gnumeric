@@ -1,0 +1,106 @@
+# Build every Native backend (Linux, Haiku and Windows in Docker SDKs, macOS
+# on a GitHub-hosted Mac) and publish one zip per platform. A tag like v1.2.3
+# creates a GitHub release with the zips attached.
+# Run by hand (Actions > Release > Run workflow) for a dry run: the zips are
+# kept as workflow artifacts and no tag or release is created.
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+  workflow_dispatch:
+    inputs:
+      platforms:
+        description: 'Space-separated platforms, or "all"'
+        default: all
+      native_ref:
+        description: 'Native branch or tag (empty: fetch_native.sh default)'
+        default: ''
+
+permissions:
+  contents: read
+
+env:
+  NATIVE_REF: ${{ inputs.native_ref }}
+
+jobs:
+  plan:
+    runs-on: ubuntu-24.04
+    outputs:
+      platforms: ${{ steps.plan.outputs.platforms }}
+      version: ${{ steps.plan.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: plan
+        env:
+          WANTED: ${{ inputs.platforms || 'all' }}
+        run: |
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json, os
+          specs = json.load(open('scripts/build/platforms.json'))
+          known = list(specs)
+          wanted = os.environ['WANTED'].split()
+          names = known if wanted == ['all'] else wanted
+          unknown = sorted(set(names) - set(known))
+          if unknown:
+              raise SystemExit(f'unknown platforms: {unknown}; known: {known}')
+          # Docker SDK backends run on Ubuntu; host backends name a runner.
+          include = [{'platform': n, 'runner': specs[n].get('runner', 'ubuntu-24.04')}
+                     for n in names]
+          print('platforms=' + json.dumps(include))
+          PY
+          if [ "$GITHUB_REF_TYPE" = tag ]; then
+            echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+          else
+            echo "version=0.0.0-dev.${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
+          fi
+
+  build:
+    needs: plan
+    name: build (${{ matrix.platform }})
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.plan.outputs.platforms) }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install packaging tools
+        if: runner.os == 'Linux'
+        run: sudo apt-get update -q && sudo apt-get install -y -q patchelf zip
+      - name: Build and package
+        run: |
+          python3 scripts/build/package.py ${{ matrix.platform }} \
+              --version ${{ needs.plan.outputs.version }}
+      - name: Show build logs
+        if: failure()
+        run: tail -n 200 build/platforms/*/release/*.log || true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: isaac-${{ needs.plan.outputs.version }}-${{ matrix.platform }}
+          path: dist/isaac-${{ needs.plan.outputs.version }}-${{ matrix.platform }}.zip
+          if-no-files-found: error
+          compression-level: 0
+
+  release:
+    needs: [plan, build]
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          cd dist
+          sha256sum *.zip > SHA256SUMS
+          gh release create "$GITHUB_REF_NAME" *.zip SHA256SUMS \
+              --title "Isaac $GITHUB_REF_NAME" --generate-notes --verify-tag

@@ -3,11 +3,14 @@
 from pathlib import Path
 import json
 import os
+import subprocess
 import shlex
 import sys
 
 ROOT = Path(__file__).resolve().parents[2]
-NATIVE = Path(os.environ.get('NATIVE_ROOT', ROOT.parent / 'native')).resolve()
+NATIVE = Path(os.environ.get('NATIVE_ROOT') or subprocess.run(
+    ['sh', str(ROOT / 'scripts/build/fetch_native.sh')], check=True,
+    capture_output=True, text=True).stdout.strip()).resolve()
 PLATFORMS = json.loads((ROOT / 'scripts/build/platforms.json').read_text())
 PREFIXES = {'cde-xephyr': 'CDE', 'openlook-xephyr': 'OPENLOOK',
             'window-maker-xephyr': 'WINDOW_MAKER'}
