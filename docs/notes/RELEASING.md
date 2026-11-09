@@ -48,7 +48,8 @@ git tag -f v1.2.3 && git push -f origin v1.2.3
 - **Windows:** the MinGW runtime DLLs, the Windows App Runtime bootstrap DLL
   and the Windows App SDK license texts. Users install Windows App Runtime 1.8.
 - **Haiku:** the executable alone; it links only system libraries.
-- **macOS:** a universal (arm64 + x86_64) `Isaac.app`, macOS 13 or newer,
+- **macOS:** a universal (arm64 + x86_64) `Isaac.app`, macOS 13.3 or newer
+  (`std::to_chars` for `double`, used to write numbers, needs 13.3),
   signed ad hoc. Packaging fails if the app links any library outside
   `/System` or `/usr/lib`. It is not Developer ID signed or notarized, so users
   must approve the first launch; the README explains how. `package.py macos`
