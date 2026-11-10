@@ -76,6 +76,27 @@ make list-platforms
 See [testing](docs/notes/TESTING.md). Tests run in Docker, so ASan works even
 on hosts that preload a security agent; see [that note](docs/notes/HOST-ASAN.md).
 
+## Desktop icon
+
+Isaac's desktop icon is [`assets/icons/ISAAC.PNG`](assets/icons/ISAAC.PNG): 32x32
+pixels, black ink on white paper, transparent outside the icon. The build
+copies it next to the executable: `make` writes `bin/ISAAC.PNG`, and every
+release zip has `ISAAC.PNG` beside `isaac`.
+
+To build a GEMiX image, take `ISAAC.PNG` from the `linux-gemix-gemd` release
+zip, convert it with GEM's `resgen` and install it under the lowercase program
+name, matching the program entry `/opt/gem/Programs/isaac`:
+
+```sh
+resgen icons -o isaac.rsc ISAAC.PNG
+install -m 0644 isaac.rsc /opt/gem/share/gem/icons/isaac.rsc
+```
+
+GEM Desktop then shows the icon for `isaac` in the Programs folder. Without
+the file, Desktop shows the standard program icon. GEM's
+[program deployment guide](https://github.com/triglav-os/gem/blob/main/docs/guides/PROGRAM_DEPLOYMENT.md)
+explains how Desktop finds icons.
+
 ## Releases
 
 Pushing a `vX.Y.Z` tag builds every backend and publishes one zip per

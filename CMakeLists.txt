@@ -70,6 +70,8 @@ target_include_directories(isaac_ui PUBLIC src/ui)
 target_link_libraries(isaac_ui PUBLIC isaac_core native)
 
 add_executable(isaac WIN32 MACOSX_BUNDLE src/main.cpp)
+# The desktop icon ships beside the executable (GEMiX converts it with resgen).
+configure_file(assets/icons/ISAAC.PNG "${CMAKE_BINARY_DIR}/bin/ISAAC.PNG" COPYONLY)
 target_link_libraries(isaac PRIVATE isaac_ui)
 if(APPLE)
     set_target_properties(isaac PROPERTIES

@@ -71,6 +71,8 @@ native:
 	    "$(NATIVE_ROOT)" "$(NATIVE_BUILD)" "$(NATIVE_CONFIG)"
 app: libs native
 	+flock "$(OBJROOT)/src.lock" $(MAKE) --no-print-directory -C src
+	@mkdir -p "$(BIN)"
+	@cp assets/icons/ISAAC.PNG "$(BIN)/ISAAC.PNG"
 resources: native
 	@mkdir -p "$(OBJROOT)"
 	+flock "$(OBJROOT)/src.lock" $(MAKE) --no-print-directory -C src resources
