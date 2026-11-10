@@ -22,10 +22,8 @@
 namespace ui {
 namespace {
 
-constexpr int bar_extent = 30;
 constexpr int header_height = 22;
 constexpr int header_width = 44;
-constexpr int tabs_height = 24;
 
 // As long as any window: a hosted control is clipped at the strip's end.
 constexpr int formula_length = 4096;
@@ -127,12 +125,13 @@ native::tool_item make_tool(const tool_entry &entry) {
 
 // Return a hosted control item.
 native::tool_item make_control(const char *id, native::wnd &control,
-                               int length) {
+                               int length, bool fill_width = false) {
     native::tool_item item;
     item.id = id;
     item.kind = native::tool_kind::control;
     item.control = &control;
     item.length = length;
+    item.control_fill_width = fill_width;
     return item;
 }
 
@@ -170,20 +169,15 @@ std::vector<std::string> format_labels() {
 
 main_window::main_window(const app::options &settings)
     : native::app_wnd("Isaac", 60, 40, 1000, 760), settings_(settings),
-      number_box_(format_labels(), native::combo_box_style::drop_down_list, 6,
-                  5, 110, 24),
-      font_box_(fonts_.families(), native::combo_box_style::drop_down_list,
-                122, 5, 180, 24),
-      size_box_({}, native::combo_box_style::drop_down_list, 308, 5, 64, 24),
-      color_box_({}, native::combo_box_style::drop_down_list, 378, 5, 90, 24),
-      fill_box_({}, native::combo_box_style::drop_down_list, 474, 5, 90, 24),
-      zoom_box_(zoom_labels(), native::combo_box_style::drop_down_list, 572, 5,
-                80, 24),
+      number_box_(format_labels(), native::combo_box_style::drop_down_list),
+      font_box_(fonts_.families(), native::combo_box_style::drop_down_list),
+      size_box_({}, native::combo_box_style::drop_down_list),
+      color_box_({}, native::combo_box_style::drop_down_list),
+      fill_box_({}, native::combo_box_style::drop_down_list),
+      zoom_box_(zoom_labels(), native::combo_box_style::drop_down_list),
       canvas_(fonts_), formula_(canvas_),
-      toolbar_(*this, native::window_edge::top, bar_extent),
-      format_bar_(*this, native::window_edge::top, bar_extent),
-      formula_strip_(*this, native::window_edge::top, bar_extent),
-      tabs_(canvas_, native::window_edge::bottom, tabs_height),
+      toolbar_(*this), format_bar_(*this), formula_strip_(*this),
+      sheet_bar_(canvas_, native::window_edge::bottom),
       col_header_(canvas_, native::window_edge::top, header_height),
       row_header_(canvas_, native::window_edge::left, header_width),
       status_(*this, canvas_), open_dialog_(*this, "Open"),
@@ -193,10 +187,18 @@ main_window::main_window(const app::options &settings)
       input_(*this), function_(*this) {
     canvas_.set_parent(this);
     set_scroll_content(&canvas_);
+    // Joined fields share one divider; the toolbar supplies horizontal rules.
+    for (auto *box : {&number_box_, &font_box_, &size_box_, &color_box_,
+                      &fill_box_, &zoom_box_})
+        box->set_border_sides(native::border_sides::right);
     build_menu();
     build_toolbar();
     build_format_bar();
     build_formula_strip();
+    tabs_.set_selection_only(true).set_page_frame_visible(false)
+        .set_tab_placement(native::tab_placement::bottom);
+    sheet_bar_.set_border_sides(native::border_sides::none);
+    sheet_bar_.add_item(make_control("sheetTabs", tabs_, formula_length));
     canvas_.set_change_handler([this] { update_state(); });
     canvas_.set_command_handler(
         [this](std::string_view command) { run(command); });
@@ -233,10 +235,32 @@ main_window::main_window(const app::options &settings)
     });
 
     on_wnd_create.connect([this] {
+        const auto metrics = native::theme::create(get_gpx())->defaults();
+        // Hosted fields keep their native height, including on non-GEM UIs.
+        const int extent = std::max(metrics.toolbar_height,
+            metrics.text_edit_height + 2 * (metrics.toolbar_padding +
+                                            metrics.toolbar_control_padding));
+        toolbar_.set_extent(extent);
+        format_bar_.set_extent(extent);
+        formula_strip_.set_extent(extent);
+        for (auto *bar : {&toolbar_, &format_bar_}) {
+            auto items = bar->get_items();
+            const int button_width = bar->get_item_bounds(
+                bar == &toolbar_ ? "fileNew" : "toggleBold").w();
+            for (auto &item : items)
+                if (item.kind == native::tool_kind::separator)
+                    item.length = button_width;
+            bar->set_items(std::move(items));
+        }
         status_.set_extent(
             native::theme::create(get_gpx())->get_status_bar_height());
         canvas_.create();
         canvas_.show();
+        const int tab_extent = tabs_.get_tab_extent();
+        const auto tab_size = tabs_.get_dimensions();
+        tabs_.set_dimensions({tab_size.w, static_cast<native::dim>(tab_extent)});
+        sheet_bar_.set_extent(tab_extent + 2 * (metrics.toolbar_padding +
+                                               metrics.toolbar_control_padding));
         place_children();
         if (settings_.file)
             load(*settings_.file);
@@ -260,7 +284,7 @@ void main_window::build_toolbar() {
     for (const tool_entry &entry : tools)
         toolbar_.add_item(make_tool(entry));
     toolbar_.add_item(make_tool({"", native::tool_kind::separator, ""}));
-    toolbar_.add_item(make_control("zoomBox", zoom_box_, 80));
+    toolbar_.add_item(make_control("zoomBox", zoom_box_, 80, true));
     const auto run_tool = [this](native::tool_command command) {
         run(command.id);
         return true;
@@ -270,11 +294,11 @@ void main_window::build_toolbar() {
 }
 
 void main_window::build_format_bar() {
-    format_bar_.add_item(make_control("numberBox", number_box_, 110));
-    format_bar_.add_item(make_control("fontBox", font_box_, 180));
-    format_bar_.add_item(make_control("sizeBox", size_box_, 64));
-    format_bar_.add_item(make_control("colorBox", color_box_, 90));
-    format_bar_.add_item(make_control("fillBox", fill_box_, 90));
+    format_bar_.add_item(make_control("numberBox", number_box_, 110, true));
+    format_bar_.add_item(make_control("fontBox", font_box_, 180, true));
+    format_bar_.add_item(make_control("sizeBox", size_box_, 64, true));
+    format_bar_.add_item(make_control("colorBox", color_box_, 90, true));
+    format_bar_.add_item(make_control("fillBox", fill_box_, 90, true));
     for (const tool_entry &entry : format_tools)
         format_bar_.add_item(make_tool(entry));
 
@@ -345,7 +369,7 @@ void main_window::build_format_bar() {
 
 void main_window::build_formula_strip() {
     formula_strip_.add_item(
-        make_control("formulaBar", formula_, formula_length));
+        make_control("formulaBar", formula_, formula_length, true));
 }
 
 void main_window::place_children() {
@@ -371,7 +395,9 @@ void main_window::update_tabs() {
     for (int i = 0; i < grid.workbook().sheet_count(); ++i)
         names.push_back(grid.workbook().sheet_at(i).name());
     if (names != shown_tabs_) {
-        tabs_.set_items(names);
+        tabs_.clear_items();
+        for (const auto &name : names)
+            tabs_.add_item(name);
         shown_tabs_ = std::move(names);
     }
     if (tabs_.get_selected_index() != grid.active_index())

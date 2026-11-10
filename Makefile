@@ -9,9 +9,9 @@ MODE ?= release
 CXX := g++
 CC := gcc
 AR := ar
-# Native is cloned from GitHub on first use; NATIVE_ROOT=/path uses a checkout.
+# Prefer ../native; fetch a cached clone when no sibling checkout exists.
 NATIVE_DEFAULT := $(ROOT)/build/deps/native
-NATIVE_ROOT ?= $(NATIVE_DEFAULT)
+NATIVE_ROOT ?= $(shell sh "$(ROOT)/scripts/build/fetch_native.sh" --path)
 VERSION ?= 0.1.0
 NATIVE_BUILD := $(BUILD)/native-$(MODE)
 NATIVE_ARCHIVE := $(NATIVE_BUILD)/native/lib/native/libnative.a

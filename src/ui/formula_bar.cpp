@@ -1,5 +1,5 @@
 //
-// Paints the formula bar with the theme's field frames, and starts an
+// Paints adjoining name and formula fields with one divider, and starts an
 // edit where it is clicked.
 //
 // Derived from Gnumeric src/wbc-gtk-edit.c,
@@ -21,7 +21,6 @@ using native::coord;
 using native::dim;
 
 constexpr int name_width = 96;
-constexpr int gap = 4;
 constexpr int text_inset = 4;
 
 // Return the bar's text font.
@@ -57,8 +56,8 @@ void formula_bar::refresh() {
 native::rect formula_bar::text_area() const {
     const native::size size = get_dimensions();
     return native::rect(
-        static_cast<coord>(name_width + gap), 0,
-        static_cast<dim>(std::max(0, size.w - name_width - gap)), size.h);
+        static_cast<coord>(name_width), 0,
+        static_cast<dim>(std::max(0, size.w - name_width)), size.h);
 }
 
 void formula_bar::paint(native::wnd_paint_event event) {
@@ -66,15 +65,13 @@ void formula_bar::paint(native::wnd_paint_event event) {
     auto appearance = native::theme::create(g);
     const native::size size = get_dimensions();
     appearance->draw_surface(native::rect(0, 0, size.w, size.h),
-                             native::surface_kind::panel, {});
+                             native::surface_kind::content, {});
     view::grid_view &grid = grid_.grid();
     const native::rect name(0, 0, name_width, size.h);
     const native::rect body = text_area();
-    native::theme::state field;
-    appearance->draw_text_edit_frame(name, field);
-    field.selected = grid.editing();
-    appearance->draw_text_edit_frame(body, field);
     const auto saved = g.save_state();
+    g.set_pen(1).set_ink(appearance->get_button_border_color())
+        .draw_border(name, native::border_sides::right);
     g.set_font(bar_font());
     g.set_ink(appearance->get_content_foreground_color());
     native::text_layout layout;

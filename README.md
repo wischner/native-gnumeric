@@ -31,17 +31,33 @@ desktop. Every build goal runs inside the `wischner/gcc-x86_64-linux-sdl` image
 compiler or headers. Objects go to `build/sdl2/`, binaries to `bin/`. `make run`
 and the `SDL2, Local` F5 profile run the binary in the same image, drawing on
 your desktop through its X11 socket.
-[Native](https://github.com/wischner/native) (branch
-`fyodor-native-extensions`) is cloned into `build/deps/native` on first build;
-`make update-native` moves it to the branch's newest commit. To build against
-your own checkout, pass `NATIVE_ROOT=/path/to/native`.
+[Native](https://github.com/wischner/native) is taken from the sibling
+`../native` checkout when present, consistently for Make, CMake, platform builds
+and F5 debugging. Otherwise the `master` branch is cloned
+into `build/deps/native`. Explicit `NATIVE_REF` or `NATIVE_URL` select that cached
+clone even when a sibling exists; `make update-native` refreshes only the clone.
+`NATIVE_ROOT=/path/to/native` overrides the selection.
 
 **VS Code F5** builds and debugs the selected backend. Profiles are named
 `<name>, <env>`: `SDL2, Local`, `X11, Xephyr`, `GEM, Rasta` and so on.
 
-Toolbar graphics are embedded with Native's resource compiler. GEM and X11
-automatically select black-and-white icons; Native supplies menu and toolbar
-highlights. See [graphics resources](src/resources/README.md).
+Toolbar commands prefer Native's standard icons; GEM reuses TED's artwork.
+Application-specific and other-backend fallback graphics are embedded with
+Native's resource compiler. Native supplies toolbar dimensions, field heights,
+borders and highlights. See [graphics resources](src/resources/README.md) and
+[the GEM UI audit](docs/notes/GEM-UI.md).
+
+To build and test GEM against the shared library checkout:
+
+```sh
+docker pull wischner/gcc-x86_64-gemix:latest
+python3 -B scripts/build/platforms.py linux-gemix-gemd
+```
+
+This requires the accompanying Native toolbar metrics, `standard_icon`,
+`tool_item::control_fill_width`, and optional `tab_view::set_selection_only`
+changes. Keep the Native and Isaac
+changes together; older fetched Native checkouts do not provide these APIs.
 
 All application UI goes through Native's public API. The default build selects
 Native's SDL2 backend; `make platform-test` builds the others. See

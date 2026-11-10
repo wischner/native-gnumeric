@@ -97,7 +97,8 @@ private:
     native::toolbar toolbar_;
     native::toolbar format_bar_;
     native::toolbar formula_strip_;
-    native::tab_strip tabs_;
+    native::tab_view tabs_;
+    native::toolbar sheet_bar_;
     grid_header col_header_;
     grid_header row_header_;
     native::status_bar status_;

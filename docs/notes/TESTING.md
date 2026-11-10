@@ -52,6 +52,14 @@ interface.
 Committed test text is preceded by a fresh unhandled physical key and followed
 by release, matching Native's shortcut-text suppression contract.
 
+Toolbar checks verify shared icon identity and original dimensions, both row
+heights, and hosted native-field containment and centering before and after a
+window resize. Sheet-tab tests use the existing `tab_view` in opt-in
+selection-only mode and exercise double-click rename and undo. Existing tests
+exercise format selections, toggle state, menu
+commands, keyboard navigation, sheet tabs, header dragging, clipboard, formula
+editing, save/load and painting.
+
 `test_every_command` runs every menu row on a loaded workbook, undoes them all,
 and checks the workbook came back.
 
@@ -69,3 +77,22 @@ Logs land in `build/platforms/<name>/<mode>/`.
 
 F5 profiles are named `<name>, <env>`, such as `GEM, Rasta`. Each builds through
 the same script and debugs through `scripts/debug/linux.py`.
+
+## Default build dependency selection
+
+Make, CMake and F5 use the sibling `../native` checkout when it exists. Without
+it, the resolver uses `build/deps/native`, fetching Native's `master` branch on
+first use. `NATIVE_ROOT` overrides the path; `NATIVE_REF` / `NATIVE_URL` request
+the cached clone. The obsolete `fyodor-native-extensions` remote branch is no
+longer used. `fetch_native.sh --path` resolves without cloning, allowing Make
+to choose the same path before starting its container.
+
+The resolver was checked with and without a sibling/cached checkout and with
+explicit source/ref overrides. The default GEM Debug command was then built
+and tested without `NATIVE_ROOT`, matching the dependency path used by F5
+(249/249 checks). `make -j8 debug` also builds successfully without an override;
+its log is `build/ui-review/default-make-debug.log`.
+
+The final toolbar checks also verify joined combo geometry, right-only borders,
+square visible icon buttons and button-width separator gaps across resizing.
+Final Debug results: GEM **394/394**, SDL2 **377/377**.

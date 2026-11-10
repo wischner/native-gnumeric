@@ -13,6 +13,7 @@
 #include <filesystem>
 #include <stop_token>
 #include <string>
+#include <utility>
 #include <thread>
 
 #include <unistd.h>
@@ -130,11 +131,68 @@ private:
              {"fileNew", "undo", "toggleBold", "alignLeft", "autoSum",
               "sortAscending", "mergeCells", "formatPercent", "borderOutline"})
             CHECK(ui::tool_icon(name) != nullptr);
+        // A toolkit-provided command must use the shared object, unscaled.
+        using native::standard_icon_id;
+        for (const auto &[command, id] : {
+                 std::pair{"fileNew", standard_icon_id::file_new},
+                 std::pair{"fileOpen", standard_icon_id::file_open},
+                 std::pair{"fileSave", standard_icon_id::file_save},
+                 std::pair{"fileSaveAs", standard_icon_id::file_save_as},
+                 std::pair{"undo", standard_icon_id::undo},
+                 std::pair{"cut", standard_icon_id::cut},
+                 std::pair{"copy", standard_icon_id::copy},
+                 std::pair{"paste", standard_icon_id::paste}}) {
+            if (const auto stock = native::standard_icon(id)) {
+                CHECK(ui::tool_icon(command) == stock);
+                CHECK(stock->w() == 16 && stock->h() == 16);
+            }
+        }
         CHECK(ui::tool_icon("noSuchTool") == nullptr);
     }
 
     // The window is Writer's shape: three strips, status, canvas strips.
     void test_chrome() {
+        const auto metrics = native::theme::create(window_.get_gpx())->defaults();
+        const auto check_bars = [&] {
+            CHECK(window_.toolbar_.get_extent() == window_.format_bar_.get_extent());
+            CHECK(window_.formula_strip_.get_extent() == window_.toolbar_.get_extent());
+            CHECK(window_.toolbar_.get_extent() >= metrics.toolbar_height);
+            for (const auto *bar : {&window_.toolbar_, &window_.format_bar_}) {
+                for (const auto &item : bar->get_items()) {
+                    if (item.icon && item.text.empty()) {
+                        const auto button = bar->get_item_bounds(item.id);
+                        // Some backends clip the final tool at a narrow edge.
+                        CHECK(!button.w() || button.w() == button.h() ||
+                              button.x2() == bar->get_bounds().w() -
+                                  metrics.toolbar_padding);
+                    }
+                    if (item.kind == native::tool_kind::separator)
+                        CHECK(item.length == bar->get_extent() -
+                              2 * metrics.toolbar_padding);
+                    if (item.kind != native::tool_kind::control)
+                        continue;
+                    const auto slot = bar->get_item_bounds(item.id);
+                    const auto field = item.control->get_bounds();
+                    CHECK(field.x1() == slot.x1() && field.w() == slot.w());
+                    CHECK(item.control->get_border_sides() ==
+                          native::border_sides::right);
+                    CHECK(field.h() == metrics.text_edit_height);
+                    CHECK(field.y1() >= slot.y1());
+                    CHECK(field.y2() <= slot.y2());
+                    CHECK(std::abs((field.y1() - slot.y1()) -
+                                   (slot.y2() - field.y2())) <= 1);
+                }
+            }
+        };
+        check_bars();
+        const auto initial = window_.get_dimensions();
+        window_.set_dimensions({640, initial.h});
+        check_bars();
+        window_.set_dimensions(initial);
+        check_bars();
+        // GEM's toolbar/status bands come from the same gemctl layout.
+        if (native::standard_icon(native::standard_icon_id::file_new))
+            CHECK(window_.toolbar_.get_extent() == metrics.status_bar_height);
         CHECK(window_.toolbar_.get_items().size() > 10);
         CHECK(window_.format_bar_.get_items().size() > 10);
         CHECK(window_.status_.get_extent() ==
@@ -145,7 +203,7 @@ private:
         CHECK(window_.status_.get_parts()[1].width == 150);
         CHECK(window_.status_.get_parts()[2].width == 70);
         CHECK(window_.status_.get_parts()[2].text == "100%");
-        CHECK(window_.tabs_.get_items().size() == 3);
+        CHECK(window_.tabs_.get_item_count() == 3);
         CHECK(window_.get_title() == "Untitled - Isaac");
         CHECK(canvas_.get_client_bounds().d.w > 0);
         CHECK(window_.formula_.get_created());
@@ -304,15 +362,34 @@ private:
     }
 
     void test_tabs() {
-        native::tab_strip &tabs = window_.tabs_;
-        tabs.on_selection_change.emit(1);
+        native::tab_view &tabs = window_.tabs_;
+        CHECK(tabs.get_selection_only());
+        CHECK(tabs.get_created());
+        CHECK(!tabs.get_item(0).has_content());
+        CHECK(tabs.get_tab_placement() == native::tab_placement::bottom);
+        CHECK(tabs.get_content_bounds().w() == 0);
+        CHECK(canvas_.get_parent() == &window_);
+        tabs.on_native_selection(1);
         CHECK(grid().active_index() == 1);
         CHECK(window_.status_.get_parts()[0].text == "Sheet 2 of 3");
+        const auto tab = tabs.get_tab_bounds(1);
+        native::mouse_event activate(native::mouse_button::left,
+            native::mouse_action::release,
+            native::point(tab.x1() + tab.w() / 2, tab.y1() + tab.h() / 2));
+        activate.clicks = 2;
+        tabs.on_native_mouse_click(activate);
+        CHECK(window_.input_.get_created());
+        CHECK(window_.input_.get_title() == "Rename Sheet");
+        window_.input_.answer_.set_text("Renamed");
+        window_.input_.ok_.on_click.emit();
+        CHECK(sheet().name() == "Renamed");
+        CHECK(tabs.get_item(1).get_title() == "Renamed");
+        window_.run("undo");
         window_.run("insertSheet");
-        CHECK(tabs.get_items().size() == 4);
+        CHECK(tabs.get_item_count() == 4);
         CHECK(tabs.get_selected_index() == 2);
         window_.run("deleteSheet");
-        CHECK(tabs.get_items().size() == 3);
+        CHECK(tabs.get_item_count() == 3);
         window_.run("sheetPrevious");
         window_.run("undo");
         window_.run("undo");
@@ -419,7 +496,7 @@ private:
         CHECK(!grid().commands().can_undo());
         window_.load(fs::path(FIXTURES) / "formula-tests.gnumeric");
         CHECK(grid().workbook().sheet_count() == 3);
-        CHECK(window_.tabs_.get_items()[0] == "Sheet1");
+        CHECK(window_.tabs_.get_item(0).get_title() == "Sheet1");
         window_.load(path_);
     }
 

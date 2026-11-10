@@ -1,6 +1,6 @@
 //
-// Embedded toolbar artwork selected by Native for the current backend.
-// GEM and X11 receive binary ink masks; other backends receive color icons.
+// Toolkit-standard command artwork with embedded application fallbacks.
+// Native selects backend variants and owns visual state feedback.
 //
 // GPL 2.0 or later (see: LICENSE)
 // Copyright (C) 2026 tomaz stih

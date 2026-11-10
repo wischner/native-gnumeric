@@ -8,7 +8,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 set(ISAAC_VERSION "0.1.0" CACHE STRING "Application version")
 if(NOT NATIVE_ROOT)
-    # Same GitHub clone the Makefile uses; -DNATIVE_ROOT=/path uses a checkout.
+    # Same dependency selection as Make/F5; -DNATIVE_ROOT=/path overrides it.
     execute_process(COMMAND sh "${CMAKE_SOURCE_DIR}/scripts/build/fetch_native.sh"
         OUTPUT_VARIABLE NATIVE_ROOT OUTPUT_STRIP_TRAILING_WHITESPACE
         COMMAND_ERROR_IS_FATAL ANY)

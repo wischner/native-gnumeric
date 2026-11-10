@@ -1,6 +1,6 @@
 //
-// Resolves toolbar icons from the embedded Native resource pack. Backend
-// selection belongs to native::resources; controls own theme feedback.
+// Prefers shared toolkit command icons, then the embedded resource pack.
+// Backend selection and all visual feedback belong to Native.
 //
 // GPL 2.0 or later (see: LICENSE)
 // Copyright (C) 2026 tomaz stih
@@ -10,6 +10,7 @@
 
 #include <stdexcept>
 #include <string>
+#include <utility>
 
 namespace native_embedded {
 // Defined by Native rc in the generated resource translation unit.
@@ -25,6 +26,22 @@ const native::resources &graphics_resources() {
 }
 
 std::shared_ptr<const native::img> tool_icon(std::string_view command) {
+    using native::standard_icon_id;
+    static constexpr std::pair<std::string_view, standard_icon_id> standard[] = {
+        {"fileNew", standard_icon_id::file_new},
+        {"fileOpen", standard_icon_id::file_open},
+        {"fileSave", standard_icon_id::file_save},
+        {"fileSaveAs", standard_icon_id::file_save_as},
+        {"fileClose", standard_icon_id::file_close},
+        {"cut", standard_icon_id::cut}, {"copy", standard_icon_id::copy},
+        {"paste", standard_icon_id::paste}, {"undo", standard_icon_id::undo},
+        {"redo", standard_icon_id::redo}, {"filePrint", standard_icon_id::print},
+        {"find", standard_icon_id::find},
+    };
+    for (const auto &[id, icon] : standard)
+        if (command == id)
+            if (auto image = native::standard_icon(icon))
+                return image;
     const auto &pack = graphics_resources();
     const native::resource_variant *entry = nullptr;
     try {

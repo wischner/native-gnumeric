@@ -14,7 +14,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[2]
 NATIVE = Path(os.environ.get('NATIVE_ROOT') or subprocess.run(
     ['sh', str(ROOT / 'scripts/build/fetch_native.sh')], check=True,
-    capture_output=True, text=True).stdout.strip()).resolve()
+    stdout=subprocess.PIPE, text=True).stdout.strip()).resolve()
 PLATFORMS = json.loads((ROOT / 'scripts/build/platforms.json').read_text())
 TIMEOUT = 1800
 BUILD_TYPES = {'release': 'Release', 'debug': 'Debug'}
@@ -83,6 +83,8 @@ def run_one(name, mode, build_only, resources_only=False):
                                     stderr=subprocess.STDOUT,
                                     timeout=TIMEOUT)
         if result.returncode != 0:
+            print((build / f'{stage}.log').read_text()[-4000:],
+                  file=sys.stderr, flush=True)
             return f'{stage} failed ({result.returncode})'
     return 'passed'
 
@@ -104,10 +106,6 @@ def main():
     for name in names:
         outcome = run_one(name, mode, build_only)
         print(f'{name}: {outcome}', flush=True)
-        if build_only and outcome != 'passed':
-            log = build_dir(name, mode) / 'build.log'
-            if log.exists():
-                print(log.read_text()[-4000:], flush=True)
         failed |= outcome != 'passed' and not outcome.startswith('skipped')
     return 1 if failed else 0
 
