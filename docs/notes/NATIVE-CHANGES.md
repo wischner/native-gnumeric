@@ -1,8 +1,11 @@
 # Native changes made for Isaac
 
 These changes are part of [Native](https://github.com/wischner/native) on
-`master`; local development uses the sibling checkout. A contract added to Native has to work on
-every backend, so nothing here is SDL2-only.
+`master`; local development uses the sibling checkout. Selection-only tabs and
+full-width controls were published in `abdfcc7`; configurable separator widths
+and GEM separator painting followed in `4e6f805`. Shared API defaults preserve
+existing callers. Runtime coverage is listed in [platform status](PLATFORM-STATUS.md);
+portable APIs alone do not establish acceptance on every backend.
 
 | Change | Why | Backends |
 | --- | --- | --- |

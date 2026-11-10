@@ -96,3 +96,25 @@ its log is `build/ui-review/default-make-debug.log`.
 The final toolbar checks also verify joined combo geometry, right-only borders,
 square visible icon buttons and button-width separator gaps across resizing.
 Final Debug results: GEM **394/394**, SDL2 **377/377**.
+
+## Reproducing the final GEM checks
+
+```sh
+docker pull wischner/gcc-x86_64-gemix:latest
+python3 -B scripts/build/platforms.py linux-gemix-gemd --mode debug
+python3 -B scripts/build/platforms.py linux-sdl2 --mode debug
+```
+
+Read `configure.log`, `build.log` and `test.log` under each backend's
+`build/platforms/<backend>/debug/` directory. These are generated local
+artifacts, not committed test evidence. Native is compiled from the selected
+source checkout inside the SDK container. The GEM test runner starts a private
+`gemd` and stops it afterward; F5 or an external desktop may have a separate,
+older server that must be restarted after an SDK update.
+
+For visual acceptance, check the menu, square Undo button, one-button-wide
+group gaps, adjoining formatting combos and the single cell-name/formula
+divider. Select and rename a sheet, open a combo popup, edit a formula and
+resize the window. A passing portable suite does not by itself prove menu
+installation: `GEM menu installation failed` in the runtime log is a separate
+failure. SDK 1.5.1 or later is required on both sides for the full menu.

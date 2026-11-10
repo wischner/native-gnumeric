@@ -51,13 +51,21 @@ To build and test GEM against the shared library checkout:
 
 ```sh
 docker pull wischner/gcc-x86_64-gemix:latest
-python3 -B scripts/build/platforms.py linux-gemix-gemd
+python3 -B scripts/build/platforms.py linux-gemix-gemd --mode debug
 ```
 
-This requires the accompanying Native toolbar metrics, `standard_icon`,
-`tool_item::control_fill_width`, and optional `tab_view::set_selection_only`
-changes. Keep the Native and Isaac
-changes together; older fetched Native checkouts do not provide these APIs.
+Use Native commit `4e6f805` or a descendant containing its changes. It includes
+standard icons, toolbar metrics, full-width hosted controls, configurable
+separator gaps and optional selection-only tabs. A cached Native clone is not
+updated automatically: run `make update-native` to refresh it. Update a sibling
+checkout separately; the build leaves its local work untouched.
+
+Docker supplies the GEM SDK and `gemd`; Native itself is built from the source
+selected above. Complete menus require matching GEM client/server SDK **1.5.1
+or later**. Pulling a newer image requires rebuilding Isaac and restarting its
+GEM session so both sides use the matching protocol. Passing the desktop tests
+alone does not prove that the server accepted the menu; check the runtime log
+and the visible menu as described in [testing](docs/notes/TESTING.md).
 
 All application UI goes through Native's public API. The default build selects
 Native's SDL2 backend; `make platform-test` builds the others. See

@@ -1,26 +1,26 @@
 # Platform status
 
-Recorded 2026-11-07. "End to end" means real input went through the toolkit into
-the running application.
+Updated 2026-11-10. GEM, SDL2 and Motif results include the Native tab migration;
+other backend results are from 2026-11-07 and were not rerun for this change.
+"End to end" means real input went through the toolkit into the running app.
 
-| Backend | F5 profile | Builds | Desktop test | Typing verified by |
+| Backend | F5 profile | Builds | Latest desktop test | Typing verified by |
 | --- | --- | --- | --- | --- |
-| SDL2 | SDL2, Local | Yes | 151/151, also in Debug | Native routing test |
-| X11 | X11, Xephyr | Yes | 151/151 | End to end: click, typing, shifted formula, arrows, Ctrl+B |
-| Motif | Motif, Xephyr | Yes | 151/151 | Not by itself; same input path as Writer's |
-| OPEN LOOK | OPEN LOOK, Xephyr | Yes | 151/151 | Not by itself; same input path as Writer's |
-| Window Maker | Window Maker, Xephyr | Yes | 151/151 | Not by itself; same input path as Writer's |
-| GEM (gemd) | GEM, Rasta | Yes | 151/151 | Native's Rasta key packet test |
-| Wayland | None | Yes | Not run | **Not verified** |
-| elementary | None | Yes | Not run | **Not verified** |
-| Haiku | Haiku, VM | Cross-build | Not run | **Not verified** |
-| Windows | None | Cross-build | Not run | **Not verified** |
+| SDL2 | SDL2, Local | Yes | 377/377, Debug | Native routing test |
+| X11 | X11, Xephyr | Earlier build | 151/151, earlier suite | End to end: click, typing, shifted formula, arrows, Ctrl+B |
+| Motif | Motif, Xephyr | Yes | 242/242, tab migration; final toolbar changes not rerun | Not by itself; same input path as Writer's |
+| OPEN LOOK | OPEN LOOK, Xephyr | Earlier build | 151/151, earlier suite | Not by itself; same input path as Writer's |
+| Window Maker | Window Maker, Xephyr | Earlier build | 151/151, earlier suite | Not by itself; same input path as Writer's |
+| GEM (gemd) | GEM, Rasta | Yes | 394/394, Debug | Native's Rasta key packet test |
+| Wayland | None | Earlier build | Not run | **Not verified** |
+| elementary | None | Earlier build | Not run | **Not verified** |
+| Haiku | Haiku, VM | Earlier cross-build | Not run | **Not verified** |
+| Windows | None | Earlier cross-build | Not run | **Not verified** |
 | macOS | None | Not built | Not run | **Not verified** |
 
-Screens were captured and inspected on SDL2 and X11 under Xvfb, and on GEM from
-the Rasta framebuffer, each showing Gnumeric's loan template fully calculated.
-Writer and Isaac match on all three. Neither shows a menu bar in a GEM framebuffer
-capture.
+Earlier SDL2, X11 and GEM captures showed the loan template fully calculated.
+The final GEM capture also shows the menu after updating to SDK 1.5.1; the
+previous missing-menu observation applied to the older GEM runtime.
 
 The end-to-end X11 run used a throwaway XTest probe, which is not in the
 repository. `tests/ui/test_desktop.cpp` remains the portable suite and enters above
@@ -38,11 +38,10 @@ Unit tests pass 1,801 of 1,801 under ASan and UBSan in
 - **Windows, Wayland, elementary, Haiku, macOS:** text routing is written in
   Native, and all but macOS compile here, but Isaac has not been run on them.
 
-## Toolbar audit (2026-11-10)
+## Initial toolbar audit (2026-11-10)
 
-With the sibling Native toolbar metrics and standard-icon changes, the latest
-Gemix Docker image builds Isaac and passes **249/249** desktop checks. SDL2
-Debug passes **232/232**, with Native compiled under AddressSanitizer and UBSan.
+At the initial audit stage, the sibling Native toolbar metrics and standard-icon
+changes passed **249/249** GEM desktop checks. SDL2 Debug passed **232/232**, with Native compiled under AddressSanitizer and UBSan.
 Native's existing toolbar/ruler/control regression executable also passes
 against the same GEM archive. All 128 words in the eight shared icon masks
 match TED v1.0.3 exactly. The different desktop totals reflect GEM's available

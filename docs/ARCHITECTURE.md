@@ -56,9 +56,24 @@ following Native's own rules. See [notes/NATIVE-CHANGES.md](notes/NATIVE-CHANGES
 Isaac's shell is Writer's: the same 1000×760 window, the same File, Edit, View,
 Insert, Format and Help menus with the same shortcuts, the same toolbar order,
 the same format bar of hosted combo boxes, the same four-part status bar and the
-same Find and Replace window. Data is the one added menu. The 17 icons they share
-are byte-identical, and the nine spreadsheet tools are drawn in the same hand by
-the same exporter. A user of one knows the other.
+same Find and Replace window. Data is the one added menu. Standard command icons resolve through Native's
+shared catalog; GEM uses TED's original 16×16 masks. Spreadsheet-specific
+artwork and unsupported stock operations use the embedded fallback resources.
+
+### Native chrome and sheet selection
+
+Native owns toolbar dimensions, control placement and drawing. Isaac requests
+the theme's band height with enough room for native fields and their vertical
+insets. Formatting and zoom controls fill their slot width and draw only a
+right border. The formula canvas similarly joins its name and formula areas
+with one divider. Separator gaps match a square command slot; Native's GEM
+separator painter draws the boundary before the next tool.
+
+Sheet labels use `native::tab_view` in optional selection-only mode. They select
+which workbook sheet the existing grid canvas displays; they do not create a
+canvas per tab. Native handles tab layout and interaction, while Isaac retains
+sheet selection and rename commands. See [the GEM UI audit](notes/GEM-UI.md)
+for control choices and validation.
 
 ### Values are a variant
 

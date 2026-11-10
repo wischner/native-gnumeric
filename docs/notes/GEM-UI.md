@@ -1,11 +1,15 @@
 # GEM UI consistency audit
 
-Audited 2026-11-10 against the local GEM v1.0.3 source at
-`d940cf31ee9e85af0264a83abd1526d4475ffb0c` and the latest published
-`wischner/gcc-x86_64-gemix:latest` image, digest
-`sha256:14c2c1638d545a175a9e16489f32a47a392c2b1ce44e140f1fffba1a96b6b423`.
-The image reports the same GEM revision. The application builds against the
-sibling Native source to include the accompanying shared changes.
+The initial layout and icon audit on 2026-11-10 used GEM v1.0.3 source at
+`d940cf31ee9e85af0264a83abd1526d4475ffb0c`. Final validation uses GEM SDK
+**1.5.1**, supplied by `wischner/gcc-x86_64-gemix:latest`, with image digest
+`sha256:891f7938bf7b468f8c2342fb2bb66d0dd1c2cce91ae10a6026b8c92628be6c09`.
+Native is compiled from the sibling checkout, including the shared toolbar
+changes published in Native commit `4e6f805`.
+
+The Docker image supplies GEM headers, libraries and `gemd`, not Isaac's
+Native implementation. The earlier SDK 1.5.0 rejected this application's menu;
+with SDK 1.5.1 the menu is visible and the final run has no installation error.
 
 ## Authoritative layout and artwork
 
@@ -76,15 +80,21 @@ functionality was made. Toolbar actions, command IDs and shortcuts are unchanged
 
 ## Validation
 
-The desktop suite checks standard-icon identity and 16×16 dimensions, toolbar
-height consistency, native field containment and vertical centering, including
-window narrowing and restoration. Its existing command and interaction checks
-are retained. GEM passed 249/249 checks; SDL2 Debug passed 232/232. Native's existing
-toolbar/ruler regression executable also passed against the GEM archive. Captures of Isaac, TED
-and Gemscape show 20-pixel bands and centered 18-pixel Isaac combo boxes.
-Test results and remaining runtime limits are recorded in
-[platform status](PLATFORM-STATUS.md). OS-level input and manual visual acceptance
-are distinct from these public-entry-point tests.
+Final Debug desktop checks passed **394/394 on GEM** and **377/377 on SDL2**.
+They cover shared icon identity and 16×16 dimensions, equal toolbar heights,
+joined field bounds, right-only combo borders, square visible command slots,
+button-width separator gaps, resizing and the existing commands/interactions.
+SDL2 may clip the last command at a narrow edge; GEM hides partial commands.
+
+Native's toolbar/ruler regression, window API suite and collection runtime
+suite also passed during this work with the GEM Debug library. Visual captures
+confirm 20-pixel GEM toolbar bands, centered 18-pixel combos, the adjoining
+formula fields and a square Undo button. The final capture includes the menu.
+Real pointer input separately verified sheet selection and double-click rename.
+
+See [platform status](PLATFORM-STATUS.md) for per-backend evidence and limits.
+The portable desktop checks invoke public input hooks; they do not establish
+physical input delivery or runtime acceptance on every supported platform.
 
 ## Optional native sheet tabs
 

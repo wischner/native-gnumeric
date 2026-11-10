@@ -76,7 +76,7 @@ formula left unparsed.
 | `item-bar` | `src/ui/grid_header` | Partial: no outline buttons |
 | `gnm-pane`, `sheet-control-gui` | `src/ui/grid_canvas` | Ported; no context menus |
 | `wbc-gtk`, `wbc-gtk-actions` | `src/ui/main_window`, `lib/view/commands` | Writer's shell in place of Gnumeric's |
-| `widgets/gnm-notebook` | `native::tab_strip` | Ported; no drag to reorder |
+| `widgets/gnm-notebook` | `native::tab_view` in selection-only mode | Ported; double-click rename; no drag to reorder |
 | `gui-clipboard` | `native::clipboard`, `src/ui` | Text; rich paste only inside one window |
 | `gui-file` | `native::open_file_dialog`, `save_file_dialog` | Ported |
 | `dialogs/dialog-search*` | `src/ui/find_window` | Ported |
