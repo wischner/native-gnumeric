@@ -114,7 +114,9 @@ older server that must be restarted after an SDK update.
 
 For visual acceptance, check the menu, square Undo button, one-button-wide
 group gaps, adjoining formatting combos and the single cell-name/formula
-divider. Select and rename a sheet, open a combo popup, edit a formula and
+divider. Check the continuous line below the column headers and beside the row
+numbers, including after selecting rows or columns, scrolling and resizing.
+Select and rename a sheet, open a combo popup, edit a formula and
 resize the window. A passing portable suite does not by itself prove menu
 installation: `GEM menu installation failed` in the runtime log is a separate
 failure. SDK 1.5.1 or later is required on both sides for the full menu.

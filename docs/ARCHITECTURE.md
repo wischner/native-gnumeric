@@ -158,6 +158,12 @@ The column and row headers derive from `native::ruler`, keeping its docking,
 shared corner and pointer routing. Painting and gestures are overridden. The grid
 therefore sits inside its headers as Writer's page sits inside its rulers.
 
+Isaac explicitly paints a one-pixel bottom edge on the column header strip and
+a right edge on the row header strip. Both use the theme's button-shadow color,
+matching the dividers between header labels, and are drawn after selection fills
+so the boundary with the grid stays visible. The shared top-left corner remains
+blank.
+
 ### Everything testable sits below the UI
 
 `lib/view` holds navigation, selection, editing, the clipboard and all painting

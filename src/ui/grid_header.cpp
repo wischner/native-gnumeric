@@ -115,6 +115,10 @@ void grid_header::draw(native::gpx &graphics, const native::rect &bounds) {
         graphics.draw_border(cell, columns_ ? native::border_sides::right
                                             : native::border_sides::bottom);
     }
+    // Keep the header-to-grid divider visible after selection fills.
+    graphics.set_ink(rule).set_pen(1);
+    graphics.draw_border(bounds, columns_ ? native::border_sides::bottom
+                                          : native::border_sides::right);
 }
 
 void grid_header::select_to(int line, bool add) {
