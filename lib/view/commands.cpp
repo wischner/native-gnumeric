@@ -189,10 +189,14 @@ const std::map<std::string, action, std::less<>> &commands() {
              v.workbook().recalculate();
          }},
         {"toggleGrid",
-         [](grid_view &v) { v.active().show_grid = !v.active().show_grid; }},
+         [](grid_view &v) {
+             v.active().show_grid = !v.active().show_grid;
+             v.commands().mark_view_modified();
+         }},
         {"toggleFormulas",
          [](grid_view &v) {
              v.active().show_formulas = !v.active().show_formulas;
+             v.commands().mark_view_modified();
          }},
     };
     return table;

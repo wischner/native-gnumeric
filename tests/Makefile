@@ -29,6 +29,7 @@ $(UI_TEST): $(UI_SOURCES) $(wildcard $(ROOT)/tests/ui/*.h) $(UI_OBJ) $(LINK_LIBS
 
 ui: $(UI_TEST)
 	SDL_VIDEODRIVER=dummy SDL_RENDER_DRIVER=software $(UI_TEST)
+	SDL_VIDEODRIVER=dummy SDL_RENDER_DRIVER=software sh $(ROOT)/tests/ui/restart.sh $(UI_TEST)
 
 $(OBJDIR)/test_%: $(SRCDIR)/test_%.cpp $(LINK_LIBS)
 	@mkdir -p $(dir $@)

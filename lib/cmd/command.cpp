@@ -57,9 +57,14 @@ std::string command_stack::redo_name() const {
     return redo_.empty() ? std::string() : redo_.back()->describe();
 }
 
+void command_stack::mark_view_modified() {
+    view_modified_ = true;
+}
+
 void command_stack::mark_saved() {
     saved_depth_ = static_cast<long>(undo_.size());
     modified_ = false;
+    view_modified_ = false;
 }
 
 void command_stack::clear() {
@@ -67,6 +72,7 @@ void command_stack::clear() {
     redo_.clear();
     saved_depth_ = 0;
     modified_ = false;
+    view_modified_ = false;
 }
 
 } // namespace cmd

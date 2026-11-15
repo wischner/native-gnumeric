@@ -120,3 +120,17 @@ Select and rename a sheet, open a combo popup, edit a formula and
 resize the window. A passing portable suite does not by itself prove menu
 installation: `GEM menu installation failed` in the runtime log is a separate
 failure. SDK 1.5.1 or later is required on both sides for the full menu.
+
+## Dialog and persistence regressions
+
+`make MODE=debug ui-test` now includes every custom form and runs a second
+scenario in two independent processes via `tests/ui/restart.sh`. The writer
+uses the actual form callbacks; the reader checks restored values and Cancel.
+`test_atomic_file` checks exclusive temporary files and non-root write failures.
+See [the review](DIALOG-REVIEW.md) for exact results and scope.
+
+To leave a real dialog open for desktop inspection, run `test_desktop` with
+`ISAAC_TEST_DIALOG_PREVIEW=defineName` (or `find`, `insertFunction`, `fileOpen`,
+`fileSaveAs`, `discard` for the save confirmation, or another dialog command).
+This opt-in mode waits for the window to close; it does not run the normal
+test/automatic-exit sequence.

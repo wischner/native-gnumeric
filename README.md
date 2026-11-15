@@ -54,11 +54,24 @@ docker pull wischner/gcc-x86_64-gemix:latest
 python3 -B scripts/build/platforms.py linux-gemix-gemd --mode debug
 ```
 
-Use Native commit `4e6f805` or a descendant containing its changes. It includes
+Use Native commit `75cdcd4` or a descendant containing its changes. It includes
 standard icons, toolbar metrics, full-width hosted controls, configurable
 separator gaps and optional selection-only tabs. A cached Native clone is not
 updated automatically: run `make update-native` to refresh it. Update a sibling
 checkout separately; the build leaves its local work untouched.
+
+Native `75cdcd4` includes the dialog compatibility corrections. For an older
+checkout pinned to `426a42f`, the same changes are retained in
+[`scripts/build/native-dialogs.patch`](scripts/build/native-dialogs.patch).
+Apply it only to that older revision (from this repository):
+
+```sh
+git -C ../native apply "$PWD/scripts/build/native-dialogs.patch"
+```
+
+The build does not patch shared checkouts automatically. See
+[the dialog and persistence review](docs/notes/DIALOG-REVIEW.md) for the audit,
+validation results and the remaining upstream test limitation.
 
 Docker supplies the GEM SDK and `gemd`; Native itself is built from the source
 selected above. Complete menus require matching GEM client/server SDK **1.5.1

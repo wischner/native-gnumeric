@@ -29,6 +29,9 @@ grid_view::grid_view(book::workbook &source, cmd::command_stack &stack,
 }
 
 void grid_view::apply_scale() {
+    const double saved = active().zoom;
+    zoom_ = std::isfinite(saved) && saved > 0
+                ? std::clamp(saved, 0.1, 5.0) : 1.0;
     const double scale = zoom_ * pixels_per_point;
     active().cols().set_scale(scale);
     active().rows().set_scale(scale);
@@ -70,7 +73,13 @@ void grid_view::sync_sheets() {
 }
 
 void grid_view::set_zoom(double zoom) {
-    zoom_ = std::clamp(zoom, 0.1, 5.0);
+    if (!std::isfinite(zoom))
+        return;
+    zoom = std::clamp(zoom, 0.1, 5.0);
+    if (active().zoom != zoom) {
+        active().zoom = zoom;
+        stack_->mark_view_modified();
+    }
     apply_scale();
     clamp_scroll();
 }

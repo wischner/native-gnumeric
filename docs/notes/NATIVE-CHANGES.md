@@ -90,3 +90,14 @@ model is simpler either way.
   resize cursor.
 - `canvas` has no context-menu signal.
 - Native has no static text control; dialogs paint their prompts.
+
+## Dialog compatibility follow-up
+
+The review against `426a42f` found canvas Tab interception, missing SDL
+button/check/radio keyboard activation and missing SDL file-selector traversal.
+Fixes, tests and Native documentation were published in Native `75cdcd4` and
+are retained in [`native-dialogs.patch`](../../scripts/build/native-dialogs.patch)
+for checkouts pinned to `426a42f`. File selectors
+also stay within the screen work area at supported sizes. See the
+[dialog review](DIALOG-REVIEW.md) for verification and the unrelated upstream
+API-test failure. Native `75cdcd4` and later do not need the patch.

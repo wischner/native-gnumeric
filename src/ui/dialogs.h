@@ -48,7 +48,7 @@ public:
 private:
     friend class ::desktop_test;
 
-    void attach(native::wnd &child);
+    void layout();
     void finish(bool accepted);
 
     std::string prompt_;
@@ -70,7 +70,7 @@ public:
 private:
     friend class ::desktop_test;
 
-    void attach(native::wnd &child);
+    void layout();
     void show_category();
     void show_summary();
     void finish(bool accepted);
@@ -81,7 +81,7 @@ private:
     native::list names_;
     native::button ok_;
     native::button cancel_;
-    std::string summary_;
+    native::text_edit summary_;
 };
 
 } // namespace ui

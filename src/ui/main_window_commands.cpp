@@ -12,6 +12,7 @@
 
 #include <algorithm>
 #include <cstdlib>
+#include <cmath>
 #include <set>
 
 #include "expr/parser.h"
@@ -348,9 +349,7 @@ void main_window::set_zoom(double zoom) {
 }
 
 void main_window::show_find() {
-    if (!find_.get_created())
-        find_.create();
-    find_.show();
+    find_.open();
 }
 
 void main_window::show_about() {
@@ -411,8 +410,11 @@ void main_window::show_size(bool columns) {
     input_.ask(columns ? "Column Width" : "Row Height", "Size in points:",
                std::to_string(current),
                [this, columns, range](const std::string &text) {
-                   const double points = std::atof(text.c_str());
-                   if (points <= 0 || points > 1000) {
+                   char *end = nullptr;
+                   const double points = std::strtod(text.c_str(), &end);
+                   while (end && *end == ' ') ++end;
+                   if (end == text.c_str() || *end || !std::isfinite(points) ||
+                       points <= 0 || points > 1000) {
                        set_message("Not a size: " + text);
                        return;
                    }

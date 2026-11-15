@@ -70,7 +70,10 @@ public:
     std::string redo_name() const;
 
     // Report whether the workbook differs from its saved state.
-    bool modified() const { return modified_; }
+    bool modified() const { return modified_ || view_modified_; }
+
+    // Mark persistent view changes outside the cell undo history.
+    void mark_view_modified();
 
     // Record that the workbook was saved.
     void mark_saved();
@@ -89,6 +92,7 @@ private:
     std::vector<action_ptr> redo_;
     std::size_t limit_ = 500;
     bool modified_ = false;
+    bool view_modified_ = false;
 
     // The undo depth at saving; negative when that state is gone.
     long saved_depth_ = 0;

@@ -15,6 +15,7 @@
 
 #include "gnumeric_format.h"
 #include "util/gzip.h"
+#include "util/atomic_file.h"
 #include "util/text.h"
 
 namespace impexp {
@@ -118,6 +119,10 @@ import_result load_file(const std::filesystem::path &path,
     }
     const std::string data((std::istreambuf_iterator<char>(in)),
                            std::istreambuf_iterator<char>());
+    if (in.bad()) {
+        result.error = "The file could not be read completely";
+        return result;
+    }
     const file_format *format = nullptr;
     for (const auto &candidate : file_formats())
         if (candidate->recognizes(data))
@@ -143,27 +148,7 @@ bool save_file(const std::filesystem::path &path, book::workbook &source,
         error = failure.what();
         return false;
     }
-    std::filesystem::path temporary = path;
-    temporary += ".tmp";
-    {
-        std::ofstream out(temporary, std::ios::binary | std::ios::trunc);
-        out.write(bytes.data(), static_cast<std::streamsize>(bytes.size()));
-        out.flush();
-        if (!out) {
-            error = "The file cannot be written";
-            std::error_code ignored;
-            std::filesystem::remove(temporary, ignored);
-            return false;
-        }
-    }
-    std::error_code failure;
-    std::filesystem::rename(temporary, path, failure);
-    if (failure) {
-        error = failure.message();
-        std::filesystem::remove(temporary, failure);
-        return false;
-    }
-    return true;
+    return util::atomic_write(path, bytes, error);
 }
 
 void new_workbook(book::workbook &target) {

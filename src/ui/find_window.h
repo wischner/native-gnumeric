@@ -30,11 +30,14 @@ public:
     find_window(native::app_wnd &owner, grid_canvas &target,
                 std::function<void(const std::string &)> report);
 
+    // Open with the search field focused.
+    void open();
+
 private:
     // Drives the window through Native's public input entry points.
     friend class ::desktop_test;
 
-    void attach(native::wnd &child);
+    void layout();
     book::search_options options() const;
     void find();
     void replace();

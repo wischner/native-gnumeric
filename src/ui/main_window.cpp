@@ -14,6 +14,7 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <cstdlib>
 #include <cstdio>
 
 #include "numfmt/format.h"
@@ -362,7 +363,9 @@ void main_window::build_format_bar() {
     zoom_box_.on_selection_change.connect([this](int index) {
         if (updating_ || index < 0)
             return true;
-        set_zoom(zoom_levels[static_cast<std::size_t>(index)] / 100.0);
+        const auto &items = zoom_box_.get_items();
+        if (index < static_cast<int>(items.size()))
+            set_zoom(std::strtod(items[index].c_str(), nullptr) / 100.0);
         return true;
     });
 }

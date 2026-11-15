@@ -22,6 +22,7 @@
 #include "impexp/file_format.h"
 #include "main_window.h"
 #include "tool_icons.h"
+#include "form_layout.h"
 
 namespace fs = std::filesystem;
 using native::key_code;
@@ -38,12 +39,18 @@ public:
 
     ~desktop_test() {
         std::error_code ignored;
-        fs::remove(path_, ignored);
+        if (!std::getenv("ISAAC_TEST_RESTART_PATH"))
+            fs::remove(path_, ignored);
     }
 
     // Run everything that needs no fresh paint.
     void run_edits() {
         CHECK(canvas_.get_created());
+        if (const char *restart = std::getenv("ISAAC_TEST_RESTART_PATH")) {
+            path_ = restart;
+            test_restart(std::getenv("ISAAC_TEST_RESTART_WRITE") != nullptr);
+            return;
+        }
         test_resources();
         test_chrome();
         test_typing();
@@ -55,6 +62,7 @@ public:
         test_mouse();
         test_headers();
         test_clipboard();
+        test_dialogs();
         test_find();
         test_save_and_load();
         test_every_command();
@@ -81,6 +89,17 @@ public:
     }
 
     native::canvas &canvas() { return canvas_; }
+
+    // Keep a real dialog open for external desktop screenshots/inspection.
+    void preview(const std::string &command) {
+        if (command == "discard") {
+            type("preview");
+            press(key_code::enter);
+            window_.confirm_discard();
+        } else {
+            window_.run(command);
+        }
+    }
 
 private:
     view::grid_view &grid() { return canvas_.grid(); }
@@ -471,12 +490,211 @@ private:
         grid().move_to({0, 0}, false);
     }
 
+    // Observe focus through public key-reset notifications: moving focus away
+    // from a control with a held key must reset that control's input state.
+    void check_focus(native::wnd &expected, native::wnd &other) {
+        last_reset_ = nullptr;
+        expected.wnd::on_native_key({key_code::a, native::key_action::press,
+                                    false, key_modifiers::none});
+        other.focus();
+        CHECK(last_reset_ == &expected);
+        expected.focus();
+    }
+
+    void watch_focus(const std::vector<native::wnd *> &controls) {
+        for (auto *control : controls)
+            control->on_key_reset.connect([this, control] {
+                last_reset_ = control;
+                return false;
+            });
+    }
+
+    void check_form(native::wnd &dialog,
+                    const std::vector<native::wnd *> &controls) {
+        const auto client = dialog.get_client_bounds();
+        for (std::size_t i = 0; i < controls.size(); ++i) {
+            const auto a = controls[i]->get_bounds();
+            CHECK(a.w() > 0 && a.h() > 0);
+            CHECK(a.x1() >= client.x1() && a.y1() >= client.y1());
+            CHECK(a.x2() <= client.x2() && a.y2() <= client.y2());
+            CHECK(controls[i]->get_tab_order() == i + 1);
+            for (std::size_t j = i + 1; j < controls.size(); ++j) {
+                const auto b = controls[j]->get_bounds();
+                CHECK(a.x2() < b.x1() || b.x2() < a.x1() ||
+                      a.y2() < b.y1() || b.y2() < a.y1());
+            }
+        }
+        for (std::size_t i = 0; i < controls.size(); ++i) {
+            auto &current = *controls[i];
+            auto &next = *controls[(i + 1) % controls.size()];
+            current.focus();
+            CHECK(current.on_native_tab({key_code::tab, native::key_action::press,
+                                         false, key_modifiers::none}));
+            check_focus(next, current);
+            CHECK(next.on_native_tab({key_code::tab, native::key_action::press,
+                                      false, key_modifiers::shift}));
+            check_focus(current, next);
+        }
+    }
+
+    void test_dialogs() {
+        auto &input = window_.input_;
+        const std::vector<native::wnd *> fields{&input.answer_, &input.ok_, &input.cancel_};
+        watch_focus(fields);
+        for (const char *command : {"goTo", "renameSheet", "columnWidth",
+                                   "rowHeight", "customFormat", "defineName"}) {
+            window_.run(command);
+            check_focus(input.answer_, input.cancel_);
+            check_form(input, fields);
+            const auto m = ui::measure_form(input);
+            CHECK(input.answer_.get_bounds().h() == m.field);
+            const auto original = input.get_dimensions();
+            input.set_dimensions({native::dim(original.w + 80),
+                                  native::dim(original.h + 40)});
+            check_form(input, fields);
+            input.set_dimensions(original);
+            input.answer_.set_text("cancelled");
+            input.cancel_.on_click.emit();
+            CHECK(!input.get_modal_active());
+        }
+        window_.run("renameSheet");
+        const auto name = input.answer_.get_text();
+        input.answer_.set_text("cancelled");
+        input.cancel_.on_click.emit();
+        window_.run("renameSheet");
+        CHECK(input.answer_.get_text() == name);
+        input.cancel_.on_click.emit();
+
+        // Enter uses Native's single-line traversal, and hidden controls skip.
+        window_.run("columnWidth");
+        input.answer_.on_native_tab({key_code::enter, native::key_action::press,
+                                    false, key_modifiers::none});
+        check_focus(input.ok_, input.cancel_);
+        input.ok_.destroy();
+        input.answer_.on_native_tab({key_code::tab, native::key_action::press,
+                                    false, key_modifiers::none});
+        check_focus(input.cancel_, input.answer_);
+        input.cancel_.on_click.emit();
+        for (const char *invalid : {"nan", "inf", "12garbage", "-2", "1001"}) {
+            window_.run("columnWidth");
+            const double before = sheet().cols().points(grid().cursor().col);
+            input.answer_.set_text(invalid);
+            input.ok_.on_click.emit();
+            CHECK(sheet().cols().points(grid().cursor().col) == before);
+        }
+
+        auto &function = window_.function_;
+        const std::vector<native::wnd *> picker{&function.category_, &function.names_,
+            &function.summary_, &function.ok_, &function.cancel_};
+        watch_focus(picker);
+        window_.run("insertFunction");
+        check_focus(function.category_, function.cancel_);
+        check_form(function, picker);
+        CHECK(function.summary_.get_read_only());
+        CHECK(!function.summary_.get_text().empty());
+        function.cancel_.on_click.emit();
+        CHECK(!grid().editing());
+        window_.run("insertFunction");
+        function.ok_.on_click.emit();
+        CHECK(grid().editing());
+        grid().cancel_edit();
+
+        auto &find = window_.find_;
+        const std::vector<native::wnd *> search{&find.needle_, &find.replacement_,
+            &find.match_case_, &find.whole_cell_, &find.find_button_,
+            &find.replace_button_, &find.all_button_};
+        watch_focus(search);
+        window_.run("find");
+        check_focus(find.needle_, find.all_button_);
+        check_form(find, search);
+        const auto original = find.get_dimensions();
+        find.set_dimensions({native::dim(original.w + 80),
+                             native::dim(original.h + 60)});
+        check_form(find, search);
+        find.set_dimensions(original);
+        find.destroy();
+    }
+
+    // Invoked in two separate application processes by restart.sh.
+    void test_restart(bool write) {
+        if (write) {
+            window_.run("renameSheet");
+            window_.input_.answer_.set_text("Persisted");
+            window_.input_.ok_.on_click.emit();
+            window_.run("columnWidth");
+            window_.input_.answer_.set_text("123");
+            window_.input_.ok_.on_click.emit();
+            window_.run("rowHeight");
+            window_.input_.answer_.set_text("42");
+            window_.input_.ok_.on_click.emit();
+            window_.run("customFormat");
+            window_.input_.answer_.set_text("0.0000");
+            window_.input_.ok_.on_click.emit();
+            window_.run("defineName");
+            window_.input_.answer_.set_text("tax=$A$1");
+            window_.input_.ok_.on_click.emit();
+            window_.set_zoom(1.5625);
+            window_.run("toggleGrid");
+            window_.run("toggleFormulas");
+            CHECK(window_.save_to(path_));
+            CHECK(!grid().commands().modified());
+        } else {
+            window_.load(path_);
+            CHECK(sheet().name() == "Persisted");
+            CHECK(sheet().cols().points(0) == 123);
+            CHECK(sheet().rows().points(0) == 42);
+            CHECK(grid().cursor_style().format == "0.0000");
+            CHECK(grid().zoom() == 1.5625);
+            CHECK(!sheet().show_grid && sheet().show_formulas);
+            window_.go_to("tax");
+            CHECK(grid().cursor() == (cell_pos{0, 0}));
+            CHECK(grid().workbook().find_name("tax", &sheet(), false) != nullptr);
+            window_.run("columnWidth");
+            CHECK(std::stod(window_.input_.answer_.get_text()) == 123);
+            window_.input_.answer_.set_text("77");
+            window_.input_.cancel_.on_click.emit();
+            CHECK(sheet().cols().points(0) == 123);
+            window_.run("rowHeight");
+            CHECK(std::stod(window_.input_.answer_.get_text()) == 42);
+            window_.input_.cancel_.on_click.emit();
+            window_.run("customFormat");
+            CHECK(window_.input_.answer_.get_text() == "0.0000");
+            window_.input_.cancel_.on_click.emit();
+            CHECK(!grid().commands().modified());
+            grid().set_active(1);
+            CHECK(grid().zoom() == 1.0);
+            grid().set_active(0);
+            CHECK(grid().zoom() == 1.5625);
+        }
+    }
+
     void test_find() {
         window_.run("find");
         window_.find_.needle_.set_text("=A1");
         window_.find_.find_button_.on_click.emit();
         CHECK(grid().cursor() == (cell_pos{0, 1}));
         window_.find_.replacement_.set_text("=A1+");
+        // Match case and whole-cell choices must affect both replacement paths.
+        auto &find = window_.find_;
+        grid().commands().run(cmd::set_entry(sheet(), {10, 10}, "Alpha alpha"));
+        find.needle_.set_text("ALPHA");
+        find.replacement_.set_text("beta");
+        find.match_case_.set_checked(false);
+        find.replace_button_.on_click.emit();
+        CHECK(sheet().entry_text({10, 10}) == "beta beta");
+        window_.run("undo");
+        find.match_case_.set_checked(true);
+        find.replace_button_.on_click.emit();
+        CHECK(sheet().entry_text({10, 10}) == "Alpha alpha");
+        find.match_case_.set_checked(false);
+        find.whole_cell_.set_checked(true);
+        find.needle_.set_text("ALPHA ALPHA");
+        find.all_button_.on_click.emit();
+        CHECK(sheet().entry_text({10, 10}) == "beta");
+        window_.run("undo");
+        window_.run("undo");
+        find.whole_cell_.set_checked(false);
+        grid().move_to({0, 0}, false);
         window_.find_.destroy();
     }
 
@@ -503,6 +721,7 @@ private:
     ui::main_window &window_;
     ui::grid_canvas &canvas_;
     fs::path path_;
+    native::wnd *last_reset_ = nullptr;
 };
 
 namespace {
@@ -574,6 +793,10 @@ int program(int, char **) {
         });
     window.on_wnd_create.connect([&] {
         native::app::post([&] {
+            if (const char *preview = std::getenv("ISAAC_TEST_DIALOG_PREVIEW")) {
+                test.preview(preview);
+                return;
+            }
             test.run_edits();
             test.canvas().invalidate();
             waiter.start();

@@ -8,6 +8,8 @@
 
 #include <algorithm>
 #include <string>
+#include <limits>
+#include <cmath>
 #include <vector>
 
 #include "book/workbook.h"
@@ -573,9 +575,46 @@ void test_painting() {
     }
 }
 
+// View settings belong to sheets and must survive view reconstruction.
+void test_view_settings() {
+    fixture f;
+    f.view.set_zoom(1.5625);
+    CHECK(f.s().zoom == 1.5625);
+    CHECK(f.stack.modified());
+    f.stack.mark_saved();
+    f.view.set_zoom(1.5625);
+    CHECK(!f.stack.modified());
+    f.view.set_active(1);
+    CHECK(f.view.zoom() == 1.0);
+    f.view.set_zoom(0.75);
+    f.view.set_active(0);
+    CHECK(f.view.zoom() == 1.5625);
+    f.stack.mark_saved();
+    view::run_command(f.view, "toggleGrid");
+    view::run_command(f.view, "toggleFormulas");
+    CHECK(f.stack.modified());
+    f.type("123");
+    f.view.undo();
+    CHECK(f.stack.modified()); // undoing a cell must not hide a view change
+    f.stack.mark_saved();
+    CHECK(!f.stack.modified());
+    grid_view reopened(f.book, f.stack, f.fonts);
+    CHECK(reopened.zoom() == 1.5625);
+    CHECK(!reopened.active().show_grid && reopened.active().show_formulas);
+    CHECK(reopened.active().cols().pixels(0) ==
+          std::lround(reopened.active().cols().points(0) * 1.5625 *
+                      view::pixels_per_point));
+    reopened.set_zoom(std::numeric_limits<double>::quiet_NaN());
+    CHECK(reopened.zoom() == 1.5625);
+    f.book.sheet_at(1).zoom = std::numeric_limits<double>::infinity();
+    reopened.set_active(1);
+    CHECK(reopened.zoom() == 1.0);
+}
+
 } // namespace
 
 int main() {
+    test_view_settings();
     test_navigation();
     test_scrolling();
     test_merges();
