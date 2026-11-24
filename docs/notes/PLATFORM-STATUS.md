@@ -49,12 +49,14 @@ Isaac's Debug desktop suite passes **940/940** checks, and the F5 GDB/Xephyr
 wrapper reaches the application event loop after creating and showing the
 main window. These checks do not establish real keyboard-input acceptance.
 
-OPEN LOOK toolbar groups use whitespace, while explicit popup-menu separators
-use a single-pixel horizontal rule centered within an inactive native row.
-The backend draws the rule after XView paints, using its resolved row geometry;
-native title ledges were bottom-aligned and two pixels tall. The regression
-requires exactly one centered, uninterrupted scanline, including reopening
-and repainting command and checkable popups. Toolbar gaps retain no lines.
+OPEN LOOK toolbar groups and popup-menu separators use whitespace. Popup gaps
+are half the OLGX button height, matching olwm's desktop menu, with no lines.
+Builds and F5 use `native-openlook-sdk:1`, built from Native's
+`scripts/linux/openlook/Dockerfile`; its XView patch keeps compact menu sizing,
+painting offsets and hit testing aligned. Native's desktop regression checks
+blank pixels and exact gap height in command and checkable popups, including
+reopening and repainting, plus pointer hits and keyboard traversal.
+Use Native `67a1c61` or newer for the SDK Dockerfile and spacing correction.
 
 ## Initial toolbar audit (2026-11-10)
 

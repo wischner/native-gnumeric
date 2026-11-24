@@ -69,7 +69,8 @@
         }
     },
     "linux-openlook": {
-        "image": "wischner/gcc-x86_64-linux-openlook:latest",
+        "image": "native-openlook-sdk:1",
+        "dockerfile": "{native}/scripts/linux/openlook",
         "cmake": [
             "-DTOOLKIT=OPENLOOK"
         ],
