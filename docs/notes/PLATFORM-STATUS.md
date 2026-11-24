@@ -1,7 +1,8 @@
 # Platform status
 
-Updated 2026-11-10. GEM, SDL2 and Motif results include the Native tab migration;
-other backend results are from 2026-11-07 and were not rerun for this change.
+Updated 2026-11-24 for OPEN LOOK. GEM, SDL2 and Motif results are from
+2026-11-10 and include the Native tab migration; other backend results are
+from 2026-11-07.
 "End to end" means real input went through the toolkit into the running app.
 
 | Backend | F5 profile | Builds | Latest desktop test | Typing verified by |
@@ -9,7 +10,7 @@ other backend results are from 2026-11-07 and were not rerun for this change.
 | SDL2 | SDL2, Local | Yes | 377/377, Debug | Native routing test |
 | X11 | X11, Xephyr | Earlier build | 151/151, earlier suite | End to end: click, typing, shifted formula, arrows, Ctrl+B |
 | Motif | Motif, Xephyr | Yes | 242/242, tab migration; final toolbar changes not rerun | Not by itself; same input path as Writer's |
-| OPEN LOOK | OPEN LOOK, Xephyr | Earlier build | 151/151, earlier suite | Not by itself; same input path as Writer's |
+| OPEN LOOK | OPEN LOOK, Xephyr | Yes | 940/940, Debug | Not by itself; same input path as Writer's |
 | Window Maker | Window Maker, Xephyr | Earlier build | 151/151, earlier suite | Not by itself; same input path as Writer's |
 | GEM (gemd) | GEM, Rasta | Yes | 394/394, Debug | Native's Rasta key packet test |
 | Wayland | None | Earlier build | Not run | **Not verified** |
@@ -37,6 +38,20 @@ Unit tests pass 1,801 of 1,801 under ASan and UBSan in
   hard to read. A workbook's colors are not changed.
 - **Windows, Wayland, elementary, Haiku, macOS:** text routing is written in
   Native, and all but macOS compile here, but Isaac has not been run on them.
+
+## OPEN LOOK startup correction (2026-11-24)
+
+Native's OPEN LOOK `tab_view` now omits the page Panel for selection-only
+tabs. Previously the sheet selector's empty page bounds produced an X11
+`BadValue` during creation, immediately terminating Isaac under F5.
+The fix is in the sibling `../native` checkout used by the default build.
+Isaac's Debug desktop suite passes **940/940** checks, and the F5 GDB/Xephyr
+wrapper reaches the application event loop after creating and showing the
+main window. These checks do not establish real keyboard-input acceptance.
+
+OPEN LOOK toolbar groups use whitespace, while explicit popup-menu separators
+draw horizontal rules in disabled rows. The Native desktop, menu and toolbar
+regressions pass, and Isaac's File popup was visually checked after rebuilding.
 
 ## Initial toolbar audit (2026-11-10)
 
