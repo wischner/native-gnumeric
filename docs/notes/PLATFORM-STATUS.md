@@ -50,11 +50,11 @@ wrapper reaches the application event loop after creating and showing the
 main window. These checks do not establish real keyboard-input acceptance.
 
 OPEN LOOK toolbar groups use whitespace, while explicit popup-menu separators
-use blank inactive native title rows to draw XView's straight divider.
-The earlier image-item approach acquired rounded button chrome; the corrected
-test requires an uninterrupted horizontal rule with no surrounding outline.
-Native's desktop, menu and toolbar regressions pass. Captures of command and
-checkable popups, plus Isaac's rebuilt View menu, confirm the straight line.
+use a single-pixel horizontal rule centered within an inactive native row.
+The backend draws the rule after XView paints, using its resolved row geometry;
+native title ledges were bottom-aligned and two pixels tall. The regression
+requires exactly one centered, uninterrupted scanline, including reopening
+and repainting command and checkable popups. Toolbar gaps retain no lines.
 
 ## Initial toolbar audit (2026-11-10)
 
