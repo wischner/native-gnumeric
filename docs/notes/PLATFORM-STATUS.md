@@ -50,8 +50,11 @@ wrapper reaches the application event loop after creating and showing the
 main window. These checks do not establish real keyboard-input acceptance.
 
 OPEN LOOK toolbar groups use whitespace, while explicit popup-menu separators
-draw horizontal rules in disabled rows. The Native desktop, menu and toolbar
-regressions pass, and Isaac's File popup was visually checked after rebuilding.
+draw horizontal rules in disabled rows. The initial bitmap-only regression
+missed XView suppressing the row when `MENU_FEEDBACK` was false. That flag is
+now left enabled; `MENU_INACTIVE` alone prevents activation. Native's desktop
+test opens command and checkable popups and inspects their rendered separator
+rows. Isaac's View popup was also captured after rebuilding to verify the line.
 
 ## Initial toolbar audit (2026-11-10)
 
