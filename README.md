@@ -54,9 +54,10 @@ docker pull wischner/gcc-x86_64-gemix:latest
 python3 -B scripts/build/platforms.py linux-gemix-gemd --mode debug
 ```
 
-Use Native commit `75cdcd4` or a descendant containing its changes. It includes
-standard icons, toolbar metrics, full-width hosted controls, configurable
-separator gaps and optional selection-only tabs. A cached Native clone is not
+Use Native commit `5643515` or a descendant containing its changes. It includes
+top-level window icons through `app_wnd::set_icon()`, standard toolbar icons,
+toolbar metrics, full-width hosted controls, configurable separator gaps and
+optional selection-only tabs. A cached Native clone is not
 updated automatically: run `make update-native` to refresh it. Update a sibling
 checkout separately; the build leaves its local work untouched.
 
@@ -119,6 +120,17 @@ Isaac's desktop icon is [`assets/icons/ISAAC.PNG`](assets/icons/ISAAC.PNG): 32x3
 pixels, black ink on white paper, transparent outside the icon. The build
 copies it next to the executable: `make` writes `bin/ISAAC.PNG`, and every
 release zip has `ISAAC.PNG` beside `isaac`.
+
+The GEM artwork and [`assets/icons/openlook-isaac.png`](assets/icons/openlook-isaac.png)
+are embedded as variants of `icons.application`. Native's resource lookup
+selects the OpenLook artwork on that toolkit and the GEM artwork elsewhere,
+without platform checks in application code. The selected image is assigned
+to each main window with `app_wnd::set_icon()` before creation; OpenLook shows
+it when the window is minimized. Native sizes it for each
+backend: Windows, SDL2 and X11 desktops use window icons; macOS uses the main
+window's icon for the Dock. GTK on Wayland, elementary OS, Haiku and GEM cache
+the image without displaying a per-window icon. Their desktop integration
+still requires the platform's application icon packaging.
 
 To build a GEMiX image, take `ISAAC.PNG` from the `linux-gemix-gemd` release
 zip, convert it with GEM's `resgen` and install it under the lowercase program

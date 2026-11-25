@@ -1,5 +1,16 @@
 # Isaac graphics resources
 
+`ui::application_icon()` decodes the embedded `icons.application` resource
+once and shares it with each main window through `app_wnd::set_icon()`.
+The manifest uses `assets/icons/ISAAC.PNG` as its default (including GEM),
+and selects `assets/icons/openlook-isaac.png` with `toolkit: openlook`.
+Native's resource lookup selects the artwork automatically; the application
+contains no platform checks. Native handles backend sizing and window-system
+integration, including the OpenLook icon shown when the window is minimized.
+Both images are embedded, so runtime loading does not depend on the working
+directory or an adjacent PNG. GEM desktop program icons remain a separate
+deployment resource.
+
 `ui::tool_icon()` first asks Native's `standard_icon()` for toolkit artwork.
 On GEM this reuses TED's original 16×16 New, Open, Save, Save As, Undo, Cut,
 Copy and Paste masks from the shared library. Save As is available to callers;

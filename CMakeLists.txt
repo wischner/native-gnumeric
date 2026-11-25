@@ -62,6 +62,7 @@ else()
             -o "${CMAKE_BINARY_DIR}/resources/isaac.resources"
             --cpp "${resource_cpp}"
         DEPENDS native_rc src/resources/isaac.json ${resource_images}
+            assets/icons/ISAAC.PNG assets/icons/openlook-isaac.png
         VERBATIM)
 endif()
 add_custom_target(isaac_resources DEPENDS "${resource_cpp}")

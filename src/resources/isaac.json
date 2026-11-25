@@ -2,6 +2,21 @@
     "version": 1,
     "resources": [
         {
+            "name": "icons.application",
+            "type": "icon",
+            "variants": [
+                {
+                    "file": "../../assets/icons/ISAAC.PNG"
+                },
+                {
+                    "file": "../../assets/icons/openlook-isaac.png",
+                    "when": {
+                        "toolkit": "openlook"
+                    }
+                }
+            ]
+        },
+        {
             "name": "icons.toolbar.fileNew",
             "type": "icon",
             "variants": [
