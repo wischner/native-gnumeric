@@ -89,13 +89,17 @@ void grid_canvas::sync_viewport() {
         return;
     const native::rect client = get_client_bounds();
     view_->set_viewport(client.d.w, client.d.h);
-    const auto content = get_content_bounds();
-    const auto width = static_cast<std::uint32_t>(view_->content_width());
-    const auto height = static_cast<std::uint32_t>(view_->content_height());
-    if (content.width != width || content.height != height)
-        set_content_bounds({0, 0, width, height});
+    sync_extent();
     buffer_dirty_ = true;
     invalidate(client);
+}
+
+void grid_canvas::sync_extent() {
+    const auto content = get_content_bounds();
+    const auto width = static_cast<std::uint32_t>(view_->scroll_width());
+    const auto height = static_cast<std::uint32_t>(view_->scroll_height());
+    if (content.width != width || content.height != height)
+        set_content_bounds({0, 0, width, height});
 }
 
 void grid_canvas::refresh() {
@@ -108,6 +112,8 @@ void grid_canvas::refresh() {
 void grid_canvas::scrolled() {
     const native::canvas_scroll_position scroll = get_scroll_position();
     view_->set_scroll(scroll.x, scroll.y);
+    // Reaching the end of the scrolled extent offers another page.
+    sync_extent();
     buffer_dirty_ = true;
     invalidate(get_client_bounds());
     if (on_change_)

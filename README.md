@@ -74,6 +74,12 @@ The build does not patch shared checkouts automatically. See
 [the dialog and persistence review](docs/notes/DIALOG-REVIEW.md) for the audit,
 validation results and the remaining upstream test limitation.
 
+On OpenLook, Isaac requires Native commit `009ff38` or later. It keeps
+canvas-hosted toolbars above their canvas, provides XView canvas scrollbars,
+reports canvas resizes, and keeps keyboard focus off those scrollbars. Older
+checkouts hide the sheet-tab bar (a blank strip at the bottom), leave an
+enlarged grid black, and draw XView's focus arrow over a clicked scrollbar.
+
 Docker supplies the GEM SDK and `gemd`; Native itself is built from the source
 selected above. Complete menus require matching GEM client/server SDK **1.5.1
 or later**. Pulling a newer image requires rebuilding Isaac and restarting its
@@ -126,7 +132,9 @@ are embedded as variants of `icons.application`. Native's resource lookup
 selects the OpenLook artwork on that toolkit and the GEM artwork elsewhere,
 without platform checks in application code. The selected image is assigned
 to each main window with `app_wnd::set_icon()` before creation; OpenLook shows
-it when the window is minimized. Native sizes it for each
+it when the window is minimized. `app_wnd::set_icon_text("Isaac")` keeps the
+minimized icon label fixed as **Isaac**, independently of the workbook title.
+This requires Native commit `33ead43` or later. Native sizes it for each
 backend: Windows, SDL2 and X11 desktops use window icons; macOS uses the main
 window's icon for the Dock. GTK on Wayland, elementary OS, Haiku and GEM cache
 the image without displaying a per-window icon. Their desktop integration

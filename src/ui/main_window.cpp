@@ -187,6 +187,7 @@ main_window::main_window(const app::options &settings)
             [this](const std::string &text) { set_message(text); }),
       input_(*this), function_(*this) {
     set_icon(application_icon());
+    set_icon_text("Isaac");
     canvas_.set_parent(this);
     set_scroll_content(&canvas_);
     // Joined fields share one divider; the toolbar supplies horizontal rules.

@@ -176,6 +176,20 @@ void test_scrolling() {
     CHECK(v.cell_rect(at("B1")).x == 128);
     v.set_zoom(1);
     CHECK(v.cell_at(70, 20) == at("B2"));
+
+    // Scrollbars cover the used cells or the view, plus one page.
+    v.set_scroll(0, 0);
+    CHECK(v.scroll_height() == 1200);
+    CHECK(v.scroll_width() == 1600);
+    v.move_to(at("C200"), false);
+    f.type("x");
+    v.set_scroll(0, 0);
+    CHECK(v.scroll_height() == f.s().rows().offset(200) + 600);
+    CHECK(v.scroll_width() == 1600);
+    v.set_scroll(0, 100000);
+    CHECK(v.scroll_height() == 100000 + 1200);
+    v.set_scroll(100000000, 100000000);
+    CHECK(v.scroll_height() == v.content_height());
 }
 
 void test_merges() {

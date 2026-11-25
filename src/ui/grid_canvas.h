@@ -75,6 +75,7 @@ private:
     bool text(const std::string &utf8);
     void scrolled();
     void sync_viewport();
+    void sync_extent();
 
     // Return the content position of a host-relative point.
     native::point to_content(native::point position) const;

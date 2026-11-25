@@ -103,6 +103,13 @@ public:
     long long content_width() const;
     long long content_height() const;
 
+    // Return the extent the scrollbars cover: the used cells or the
+    // view, whichever reaches further, plus one page, as Gnumeric's
+    // scrollbars do. Mapping the whole sheet would make one pixel of
+    // thumb travel cross thousands of rows.
+    long long scroll_width() const;
+    long long scroll_height() const;
+
     // Return a cell's rectangle in content pixels, merges included.
     gfx::device_rect cell_rect(cell_pos pos);
 

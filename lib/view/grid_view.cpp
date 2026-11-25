@@ -11,12 +11,23 @@
 
 #include <algorithm>
 #include <cmath>
+#include <optional>
 
 namespace view {
 namespace {
 
 // The handle at a selection's corner is this far around the corner.
 constexpr int handle_reach = 4;
+
+// Return how far one axis scrolls: past its last used line or the
+// view's far edge, whichever is further, by one page.
+long long scroll_extent(const book::axis &axis, std::optional<int> last_used,
+                        int scroll, int viewport) {
+    const long long used = last_used ? axis.offset(*last_used + 1) : 0;
+    const long long reach =
+        std::max(used, static_cast<long long>(scroll) + viewport) + viewport;
+    return std::min(reach, axis.total());
+}
 
 } // namespace
 
@@ -96,6 +107,24 @@ long long grid_view::content_width() const {
 
 long long grid_view::content_height() const {
     return const_cast<grid_view *>(this)->active().rows().total();
+}
+
+long long grid_view::scroll_width() const {
+    const sheet &item = const_cast<grid_view *>(this)->active();
+    const std::optional<cell_range> used = item.used_range();
+    return scroll_extent(item.cols(),
+                         used ? std::optional<int>(used->end.col)
+                              : std::nullopt,
+                         scroll_x_, viewport_width_);
+}
+
+long long grid_view::scroll_height() const {
+    const sheet &item = const_cast<grid_view *>(this)->active();
+    const std::optional<cell_range> used = item.used_range();
+    return scroll_extent(item.rows(),
+                         used ? std::optional<int>(used->end.row)
+                              : std::nullopt,
+                         scroll_y_, viewport_height_);
 }
 
 void grid_view::clamp_scroll() {

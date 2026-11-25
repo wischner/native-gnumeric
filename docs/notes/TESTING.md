@@ -78,6 +78,33 @@ Logs land in `build/platforms/<name>/<mode>/`.
 F5 profiles are named `<name>, <env>`, such as `GEM, Rasta`. Each builds through
 the same script and debugs through `scripts/debug/linux.py`.
 
+### OpenLook canvas regression (2026-11-25)
+
+The blank strip above the horizontal scrollbar was the sheet-tab toolbar
+obscured by its canvas's XView Panel. The fix raises visible canvas descendants
+in ancestor order. Native `009ff38` includes a regression that checks actual
+X11 sibling stacking after show, resize, and recreation; it fails before the
+fix and passes afterward.
+
+With that fix and Native's XView canvas-scrollbar changes, the OpenLook Debug
+desktop suite passes **940/940** under ASan/UBSan (leak scanning disabled).
+An Xvfb/olwm session also verified visible sheet tabs, selection of Sheet2,
+vertical and horizontal scrolling through physical XTest clicks, and repaint
+after resizing. Captures and logs are local artifacts in
+`build/openlook-review/`. The portable pixel-buffer checks alone do not detect
+window stacking defects or prove that scrollbars are native widgets.
+
+Three follow-ups need Native's OpenLook resize and Scrollbar focus fix, also
+in `009ff38` (see its `FEATURE-MATRIX.md`). Enlarging the window previously left the new
+grid area black: OpenLook emitted no canvas `on_wnd_resize`, so the view kept
+its old viewport. A clicked Scrollbar drew XView's black focus arrow over its
+top anchor and took the arrow keys. The grid's scrollbars now cover the used
+cells or the view, whichever reaches further, plus one page
+(`grid_view::scroll_width/height`, checked in `test_view`), so dragging moves
+through cells instead of across the whole sheet. Under Xvfb/olwm, a 40-pixel
+drag on an empty sheet scrolled two rows, the grid repainted after
+enlargement, no arrow appeared, and Down/Tab still moved the cell cursor.
+
 ## Default build dependency selection
 
 Make, CMake and F5 use the sibling `../native` checkout when it exists. Without
